@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Виртуальный пазл — аккаунты с аватаркой</title>
+<title>Virtual Puzzle — Accounts with Avatar</title>
 <style>
 :root { --card-bg:#fff; --accent:#2196f3; --muted:#666; --danger:#e53935; }
 body{ font-family:Arial,Helvetica,sans-serif; margin:0; padding:18px; background:#f5f5f5; min-height:100vh; }
@@ -52,34 +52,34 @@ small { color:var(--muted); }
 <body>
 
 <header>
-  <h1>Виртуальный пазл</h1>
+  <h1>Virtual Puzzle</h1>
   <div id="topControls">
-    <button id="menuToggleBtn" class="btn">Меню</button>
-    <button id="previewBtn" class="btn">Показать картинку</button>
-    <button id="shuffleBtn" class="btn" disabled>Перемешать</button>
-    <button id="accountBtn" class="btn">Аккаунт</button>
+    <button id="menuToggleBtn" class="btn">Menu</button>
+    <button id="previewBtn" class="btn">Show Picture</button>
+    <button id="shuffleBtn" class="btn" disabled>Shuffle</button>
+    <button id="accountBtn" class="btn">Account</button>
   </div>
 </header>
 
 <main>
   <div id="puzzleArea">
-    <div id="controls" aria-label="Панель управления">
-      <input type="file" id="imageUpload" accept="image/*" title="Загрузить картинку">
+    <div id="controls" aria-label="Control Panel">
+      <input type="file" id="imageUpload" accept="image/*" title="Upload Image">
       <label style="display:flex;align-items:center;gap:6px;">
-        <input type="checkbox" id="enableCheck" checked> Проверять позиции
+        <input type="checkbox" id="enableCheck" checked> Check Positions
       </label>
-      <small style="margin-left:auto;">Перетаскивайте плитки или кликайте для обмена</small>
+      <small style="margin-left:auto;">Drag tiles or click to swap</small>
     </div>
 
-    <div id="puzzle" aria-label="Поле пазла"></div>
+    <div id="puzzle" aria-label="Puzzle Field"></div>
 
     <div id="previewContainer" style="display:none;">
-      <h3 style="margin:8px 0 6px;">Как должно выглядеть:</h3>
+      <h3 style="margin:8px 0 6px;">How it Should Look:</h3>
       <div id="previewPuzzle" class="preview-grid"></div>
     </div>
 
-    <div id="message" aria-live="polite">Нажмите «Меню», чтобы выбрать картинку и размер. Зарегистрируйтесь, чтобы сохранять результаты.</div>
-    <h3 id="timer">Время: 0:00:000</h3>
+    <div id="message" aria-live="polite">Click "Menu" to select an image and size. Register to save your results.</div>
+    <h3 id="timer">Time: 0:00:000</h3>
   </div>
 </main>
 
@@ -88,15 +88,15 @@ small { color:var(--muted); }
   <div class="panel" role="document">
     <div style="display:flex;gap:12px;">
       <div style="width:240px;">
-        <h3 style="margin:0 0 8px 0;">Выберите картинку</h3>
+        <h3 style="margin:0 0 8px 0;">Select an Image</h3>
         <div id="presetList"></div>
         <div style="margin-top:8px;">
-          <label>Или загрузите свою</label>
+          <label>Or Upload Your Own</label>
           <input type="file" id="menuUpload" accept="image/*" style="width:100%;margin-top:6px;">
         </div>
       </div>
       <div style="flex:1; display:flex; flex-direction:column;">
-        <h3 style="margin:0;">Выберите размер</h3>
+        <h3 style="margin:0;">Select Size</h3>
         <div style="display:flex;gap:8px;margin:8px 0;" id="presetSizes">
           <button class="btn" data-cols="3" data-rows="3">3×3</button>
           <button class="btn primary" data-cols="5" data-rows="6">5×6</button>
@@ -104,16 +104,16 @@ small { color:var(--muted); }
           <button class="btn" data-cols="10" data-rows="8">10×8</button>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <label>Пользовательский:
+          <label>Custom:
             <input type="number" id="menuCols" value="5" min="1" max="30" style="width:70px;margin-left:6px">
             ×
             <input type="number" id="menuRows" value="6" min="1" max="30" style="width:70px;margin-left:6px">
           </label>
         </div>
         <div style="margin-top:auto; display:flex;gap:8px;">
-          <button id="menuCreate" class="btn primary">Создать пазл</button>
-          <button id="menuUseUploaded" class="btn">Использовать загруженное</button>
-          <button id="menuClose" class="btn">Закрыть</button>
+          <button id="menuCreate" class="btn primary">Create Puzzle</button>
+          <button id="menuUseUploaded" class="btn">Use Uploaded</button>
+          <button id="menuClose" class="btn">Close</button>
         </div>
       </div>
     </div>
@@ -123,14 +123,14 @@ small { color:var(--muted); }
 <!-- Complete overlay -->
 <div id="completeOverlay" class="overlay" aria-hidden="true">
   <div class="panel small">
-    <h2>Ура! Пазл собран 🎉</h2>
-    <p id="completeTime">Время: 0:00:000</p>
+    <h2>Congratulations! Puzzle Completed 🎉</h2>
+    <p id="completeTime">Time: 0:00:000</p>
     <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
-      <button id="completeShuffle" class="btn">Перемешать</button>
-      <button id="completeNew" class="btn primary">Создать новый пазл</button>
-      <button id="completeClose" class="btn">Закрыть</button>
+      <button id="completeShuffle" class="btn">Shuffle</button>
+      <button id="completeNew" class="btn primary">Create New Puzzle</button>
+      <button id="completeClose" class="btn">Close</button>
     </div>
-    <div style="margin-top:8px;"><small>Результат сохраняется в вашем профиле, если вы вошли.</small></div>
+    <div style="margin-top:8px;"><small>Your result is saved in your profile if you are logged in.</small></div>
   </div>
 </div>
 
@@ -138,47 +138,47 @@ small { color:var(--muted); }
 <div id="accountOverlay" class="overlay" aria-hidden="true">
   <div class="panel small" role="document">
     <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="margin:0;">Аккаунт</h3>
-      <button id="accountClose" class="btn">Закрыть</button>
+      <h3 style="margin:0;">Account</h3>
+      <button id="accountClose" class="btn">Close</button>
     </div>
 
-    <div class="account-tabs" role="tablist" aria-label="Аккаунт">
-      <div id="tabLogin" class="tab active" role="tab">Войти</div>
-      <div id="tabRegister" class="tab" role="tab">Регистрация</div>
-      <div id="tabProfile" class="tab" role="tab">Профиль</div>
-      <div id="tabStats" class="tab" role="tab">Мои результаты</div>
+    <div class="account-tabs" role="tablist" aria-label="Account">
+      <div id="tabLogin" class="tab active" role="tab">Login</div>
+      <div id="tabRegister" class="tab" role="tab">Register</div>
+      <div id="tabProfile" class="tab" role="tab">Profile</div>
+      <div id="tabStats" class="tab" role="tab">My Results</div>
     </div>
 
     <!-- LOGIN -->
     <div id="paneLogin">
-      <div class="form-row"><label>Почта</label><input id="loginEmail" class="input" type="email"></div>
-      <div class="form-row"><label>Пароль</label><input id="loginPassword" class="input" type="password"></div>
+      <div class="form-row"><label>Email</label><input id="loginEmail" class="input" type="email"></div>
+      <div class="form-row"><label>Password</label><input id="loginPassword" class="input" type="password"></div>
       <div style="display:flex;gap:8px;">
-        <button id="loginBtn" class="btn primary">Войти</button>
-        <button id="goToRegister" class="btn">Регистрация</button>
+        <button id="loginBtn" class="btn primary">Login</button>
+        <button id="goToRegister" class="btn">Register</button>
       </div>
       <div id="loginMsg" style="margin-top:8px;color:var(--muted)"></div>
     </div>
 
     <!-- REGISTER -->
     <div id="paneRegister" style="display:none;">
-      <div class="form-row"><label>Почта</label><input id="regEmail" class="input" type="email"></div>
-      <div class="form-row"><label>Никнейм</label><input id="regNick" class="input" type="text" maxlength="30"></div>
+      <div class="form-row"><label>Email</label><input id="regEmail" class="input" type="email"></div>
+      <div class="form-row"><label>Username</label><input id="regNick" class="input" type="text" maxlength="30"></div>
       <div class="form-row inline">
-        <div style="flex:1;"><label>Возраст</label><input id="regAge" class="input" type="number" min="1" max="120"></div>
-        <div style="flex:1;"><label>Пароль</label><input id="regPassword" class="input" type="password"></div>
+        <div style="flex:1;"><label>Age</label><input id="regAge" class="input" type="number" min="1" max="120"></div>
+        <div style="flex:1;"><label>Password</label><input id="regPassword" class="input" type="password"></div>
       </div>
-      <div class="form-row"><label>Подтвердите пароль</label><input id="regPassword2" class="input" type="password"></div>
+      <div class="form-row"><label>Confirm Password</label><input id="regPassword2" class="input" type="password"></div>
 
       <div class="form-row">
-        <label>Аватар (jpg/png, необязательно)</label>
+        <label>Avatar (jpg/png, optional)</label>
         <input id="regAvatar" type="file" accept="image/*">
-        <img id="regAvatarPreview" src="" alt="Превью аватара" style="display:none;width:72px;height:72px;border-radius:8px;border:1px solid #ccc;margin-top:6px;object-fit:cover;">
+        <img id="regAvatarPreview" src="" alt="Avatar Preview" style="display:none;width:72px;height:72px;border-radius:8px;border:1px solid #ccc;margin-top:6px;object-fit:cover;">
       </div>
 
       <div style="display:flex;gap:8px;">
-        <button id="regBtn" class="btn primary">Зарегистрироваться</button>
-        <button id="regCancel" class="btn">Отмена</button>
+        <button id="regBtn" class="btn primary">Register</button>
+        <button id="regCancel" class="btn">Cancel</button>
       </div>
       <div id="regMsg" style="margin-top:8px;color:var(--muted)"></div>
     </div>
@@ -188,23 +188,23 @@ small { color:var(--muted); }
       <div id="profileInfo" style="margin-bottom:8px;color:var(--muted)"></div>
 
       <div style="display:flex;gap:8px;align-items:center;">
-        <img id="profileAvatarImg" src="" alt="Аватар" style="width:72px;height:72px;border-radius:10px;border:1px solid #ccc;object-fit:cover;display:none;">
+        <img id="profileAvatarImg" src="" alt="Avatar" style="width:72px;height:72px;border-radius:10px;border:1px solid #ccc;object-fit:cover;display:none;">
         <div style="flex:1;">
-          <label>Изменить аватар</label>
+          <label>Change Avatar</label>
           <input id="profileAvatarInput" type="file" accept="image/*">
           <div style="display:flex;gap:8px;margin-top:8px;">
-            <button id="saveAvatarBtn" class="btn">Сохранить аватар</button>
-            <button id="logoutBtn" class="btn">Выйти</button>
+            <button id="saveAvatarBtn" class="btn">Save Avatar</button>
+            <button id="logoutBtn" class="btn">Logout</button>
           </div>
           <div id="profileMsg" style="margin-top:8px;color:var(--muted)"></div>
         </div>
       </div>
 
       <div style="margin-top:8px;">
-        <label>Код подтверждения (демо):</label>
+        <label>Confirmation Code (demo):</label>
         <div style="display:flex;gap:8px;margin-top:6px;">
-          <input id="confirmCodeInput" class="input" placeholder="Код подтверждения">
-          <button id="confirmCodeBtn" class="btn">Подтвердить</button>
+          <input id="confirmCodeInput" class="input" placeholder="Confirmation Code">
+          <button id="confirmCodeBtn" class="btn">Confirm</button>
         </div>
       </div>
     </div>
@@ -213,7 +213,7 @@ small { color:var(--muted); }
     <div id="paneStats" style="display:none;">
       <div id="statsSummary" style="color:var(--muted)"></div>
       <table class="statsTable" id="statsTable">
-        <thead><tr><th>Картинка</th><th>Размер</th><th>Время</th><th>Дата</th></tr></thead>
+        <thead><tr><th>Image</th><th>Size</th><th>Time</th><th>Date</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -248,10 +248,10 @@ function getCurrentUser(){ const e=getCurrentUserEmail(); if(!e) return null; co
 
 /* --------- Demo presets --------- */
 const presets = [
-  { id:'p1', title:'Горы', url:'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' },
-  { id:'p2', title:'Город', url:'https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1200&auto=format&fit=crop' },
-  { id:'p3', title:'Птица', url:'https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=1200&auto=format&fit=crop' },
-  { id:'p4', title:'Абстракт', url:'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?q=80&w=1200&auto=format&fit=crop' }
+  { id:'p1', title:'Mountains', url:'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' },
+  { id:'p2', title:'City', url:'https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1200&auto=format&fit=crop' },
+  { id:'p3', title:'Bird', url:'https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=1200&auto=format&fit=crop' },
+  { id:'p4', title:'Abstract', url:'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?q=80&w=1200&auto=format&fit=crop' }
 ];
 
 /* --------- DOM refs --------- */
@@ -329,14 +329,14 @@ imageUpload.addEventListener('change', e=>{
   if(uploadedURL) URL.revokeObjectURL(uploadedURL);
   uploadedURL = URL.createObjectURL(f);
   imageURL = uploadedURL; imageId = 'uploaded:'+uploadedURL;
-  messageEl.textContent = 'Загружено пользовательское изображение. Откройте меню и нажмите «Создать пазл».';
+  messageEl.textContent = 'Custom image uploaded. Open the menu and click "Create Puzzle".';
 });
 
 /* menu actions */
-$('menuUseUploaded').addEventListener('click', ()=>{ if(!uploadedURL) return alert('Сначала загрузите картинку в меню'); imageURL = uploadedURL; imageId = 'uploaded:'+uploadedURL; messageEl.textContent='Используется загруженная картинка.'; });
+$('menuUseUploaded').addEventListener('click', ()=>{ if(!uploadedURL) return alert('First upload an image in the menu'); imageURL = uploadedURL; imageId = 'uploaded:'+uploadedURL; messageEl.textContent='Using uploaded image.'; });
 menuCreate.addEventListener('click', ()=>{
   const c = Math.max(1, Math.min(30, +menuCols.value || 1)); const r = Math.max(1, Math.min(30, +menuRows.value || 1));
-  if(!imageURL) return alert('Выберите или загрузите картинку в меню.');
+  if(!imageURL) return alert('Select or upload an image in the menu.');
   createPuzzle(imageURL, imageId, c, r);
   closeMenu();
 });
@@ -370,11 +370,11 @@ function createPuzzle(imgSrc, imgId, c, r){
     cell.appendChild(piece); cells.push(cell); puzzleEl.appendChild(cell);
   }
   currentPuzzleMeta = { imageId: imgId, imageURL: imgSrc, cols: cols, rows: rows };
-  shuffle(); shuffleBtn.disabled=false; resetTimer(); previewContainer.style.display='none'; previewPuzzle.innerHTML=''; messageEl.textContent='Пазл создан. Начинайте!';
+  shuffle(); shuffleBtn.disabled=false; resetTimer(); previewContainer.style.display='none'; previewPuzzle.innerHTML=''; messageEl.textContent='Puzzle created. Let\'s go!';
 }
 
 /* shuffle & handlers */
-shuffleBtn.addEventListener('click', ()=>{ shuffle(); solvedAlready=false; hideComplete(); resetTimer(); messageEl.textContent='Пазл перемешан'; });
+shuffleBtn.addEventListener('click', ()=>{ shuffle(); solvedAlready=false; hideComplete(); resetTimer(); messageEl.textContent='Puzzle shuffled'; });
 function shuffle(){ if(!cells.length) return; const pieces = cells.map(c=>c.firstChild); for(let i=pieces.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pieces[i],pieces[j]]=[pieces[j],pieces[i]]; } cells.forEach((cell,i)=>cell.appendChild(pieces[i])); document.querySelectorAll('.piece').forEach(p=>p.style.border='2px solid transparent'); }
 
 function onDropOnCell(e){ e.preventDefault(); this.classList.remove('drop-target'); const id = e.dataTransfer.getData('text/plain'); const dragged = document.getElementById(id); if(!dragged) return; const targetPiece = this.firstChild; const sourceCell = dragged.parentElement; if(sourceCell===this) return; sourceCell.appendChild(targetPiece); this.appendChild(dragged); dragged.classList.remove('selected','dragging'); if(enableCheckEl.checked) checkPositions(); else if(isSolved()) finishPuzzle(); }
@@ -386,31 +386,31 @@ function checkPositions(){ if(!cells.length) return; let solved=true; cells.forE
 function isSolved(){ return cells.length && cells.every((cell,i)=> +cell.firstChild.dataset.correct === i); }
 
 /* complete overlay */
-function finishPuzzle(){ if(solvedAlready) return; solvedAlready=true; stopTimer(); messageEl.textContent='Пазл собран! 🎉'; const elapsedMs = (startTime ? Math.round(performance.now()-startTime) : 0); completeTime.textContent = 'Время: ' + formatTime(elapsedMs); showComplete(); // save to user if logged in
+function finishPuzzle(){ if(solvedAlready) return; solvedAlready=true; stopTimer(); messageEl.textContent='Puzzle completed! 🎉'; const elapsedMs = (startTime ? Math.round(performance.now()-startTime) : 0); completeTime.textContent = 'Time: ' + formatTime(elapsedMs); showComplete(); // save to user if logged in
   const u = getCurrentUser(); if(u && currentPuzzleMeta){ saveResultForUser(u.email, { imageId: currentPuzzleMeta.imageId, imageURL: currentPuzzleMeta.imageURL, cols: currentPuzzleMeta.cols, rows: currentPuzzleMeta.rows, timeMs: elapsedMs, date: new Date().toISOString() }); }
 }
 function showComplete(){ $('completeOverlay').style.display='flex'; $('completeOverlay').setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
 function hideComplete(){ $('completeOverlay').style.display='none'; $('completeOverlay').setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
-completeShuffle.addEventListener('click', ()=>{ hideComplete(); shuffle(); resetTimer(); solvedAlready=false; messageEl.textContent='Пазл перемешан'; });
+completeShuffle.addEventListener('click', ()=>{ hideComplete(); shuffle(); resetTimer(); solvedAlready=false; messageEl.textContent='Puzzle shuffled'; });
 completeNew.addEventListener('click', ()=>{ hideComplete(); openMenu(); });
 completeClose.addEventListener('click', ()=>{ hideComplete(); });
 
 /* timer */
-function startTimer(){ if(started) return; started=true; startTime = performance.now(); timer = setInterval(()=>{ const t = Math.round(performance.now()-startTime); timerDisplay.textContent = 'Время: ' + formatTime(t); }, 50); }
+function startTimer(){ if(started) return; started=true; startTime = performance.now(); timer = setInterval(()=>{ const t = Math.round(performance.now()-startTime); timerDisplay.textContent = 'Time: ' + formatTime(t); }, 50); }
 function stopTimer(){ clearInterval(timer); }
-function resetTimer(){ clearInterval(timer); started=false; startTime=null; timerDisplay.textContent='Время: 0:00:000'; }
+function resetTimer(){ clearInterval(timer); started=false; startTime=null; timerDisplay.textContent='Time: 0:00:000'; }
 
 /* preview assembled */
 previewBtn.addEventListener('click', ()=>{
   const meta = currentPuzzleMeta;
   const img = (meta && meta.imageURL) || imageURL;
-  if(!img) return alert('Выберите картинку в меню.');
-  if(previewContainer.style.display==='block'){ previewContainer.style.display='none'; previewBtn.textContent='Показать картинку'; return; }
+  if(!img) return alert('Select an image in the menu.');
+  if(previewContainer.style.display==='block'){ previewContainer.style.display='none'; previewBtn.textContent='Show Picture'; return; }
   const useCols = (meta && meta.cols) || cols; const useRows = (meta && meta.rows) || rows;
   const canvasSize = 500; const pW=Math.floor(canvasSize/useCols), pH=Math.floor(canvasSize/useRows);
   previewPuzzle.innerHTML=''; previewPuzzle.style.gridTemplateColumns = `repeat(${useCols}, ${pW}px)`; previewPuzzle.style.gridTemplateRows = `repeat(${useRows}, ${pH}px)`;
   for(let i=0;i<useCols*useRows;i++){ const r=Math.floor(i/useCols), c=i%useCols; const pp=document.createElement('div'); pp.className='previewPiece'; pp.style.width=pW+'px'; pp.style.height=pH+'px'; pp.style.backgroundImage=`url(${img})`; pp.style.backgroundSize = `${useCols*pW}px ${useRows*pH}px`; pp.style.backgroundPosition = `-${c*pW}px -${r*pH}px`; previewPuzzle.appendChild(pp); }
-  previewContainer.style.display='block'; previewBtn.textContent='Скрыть картинку';
+  previewContainer.style.display='block'; previewBtn.textContent='Hide Picture';
 });
 
 /* touch support */
@@ -430,7 +430,7 @@ function genCode(){ return Math.floor(100000 + Math.random()*900000).toString();
 
 async function registerUser(email, nick, age, password, avatarDataUrl){
   const users = loadUsers();
-  if(users[email]) return { ok:false, msg:'Пользователь с этой почтой уже существует.' };
+  if(users[email]) return { ok:false, msg:'A user with this email already exists.' };
   const pwHash = await sha256Hex(password);
   const code = genCode();
   users[email] = { email, nick, age:+age, pwHash, confirmed:false, confirmationCode:code, stats:[], avatar: avatarDataUrl || null };
@@ -439,18 +439,18 @@ async function registerUser(email, nick, age, password, avatarDataUrl){
 }
 
 function confirmUser(email, code){
-  const users = loadUsers(); const u = users[email]; if(!u) return { ok:false, msg:'Пользователь не найден.' };
-  if(u.confirmed) return { ok:false, msg:'Уже подтверждён.' };
+  const users = loadUsers(); const u = users[email]; if(!u) return { ok:false, msg:'User not found.' };
+  if(u.confirmed) return { ok:false, msg:'Already confirmed.' };
   if(u.confirmationCode === code){ u.confirmed = true; delete u.confirmationCode; saveUsers(users); return { ok:true }; }
-  return { ok:false, msg:'Неверный код.' };
+  return { ok:false, msg:'Invalid code.' };
 }
 
 async function loginUser(email, password){
   const users = loadUsers(); const u = users[email];
-  if(!u) return { ok:false, msg:'Пользователь не найден.' };
+  if(!u) return { ok:false, msg:'User not found.' };
   const h = await sha256Hex(password);
-  if(h !== u.pwHash) return { ok:false, msg:'Неверный пароль.' };
-  if(!u.confirmed) return { ok:false, msg:'Почта не подтверждена. Подтвердите код.' };
+  if(h !== u.pwHash) return { ok:false, msg:'Invalid password.' };
+  if(!u.confirmed) return { ok:false, msg:'Email not confirmed. Please confirm the code.' };
   setCurrentUser(email);
   return { ok:true, user:u };
 }
@@ -458,8 +458,8 @@ async function loginUser(email, password){
 function logoutUser(){ setCurrentUser(null); updateAccountButton(); }
 
 function resendConfirmation(email){
-  const users = loadUsers(); const u = users[email]; if(!u) return { ok:false, msg:'Пользователь не найден.' };
-  if(u.confirmed) return { ok:false, msg:'Уже подтверждён.' };
+  const users = loadUsers(); const u = users[email]; if(!u) return { ok:false, msg:'User not found.' };
+  if(u.confirmed) return { ok:false, msg:'Already confirmed.' };
   const code = genCode(); u.confirmationCode = code; saveUsers(users); return { ok:true, code };
 }
 
@@ -498,9 +498,9 @@ regAvatar.addEventListener('change', e=>{
 regBtn.addEventListener('click', async ()=>{
   const email = regEmail.value.trim().toLowerCase(); const nick = regNick.value.trim(); const age = regAge.value; const pw = regPassword.value; const pw2 = regPassword2.value;
   regMsg.style.color='var(--muted)';
-  if(!email||!nick||!age||!pw||!pw2){ regMsg.textContent='Заполните все поля.'; return; }
-  if(pw !== pw2){ regMsg.textContent='Пароли не совпадают.'; return; }
-  if(pw.length < 6){ regMsg.textContent='Пароль должен быть не менее 6 символов.'; return; }
+  if(!email||!nick||!age||!pw||!pw2){ regMsg.textContent='Fill in all fields.'; return; }
+  if(pw !== pw2){ regMsg.textContent='Passwords do not match.'; return; }
+  if(pw.length < 6){ regMsg.textContent='Password must be at least 6 characters.'; return; }
 
   // read avatar if present
   let avatarDataUrl = null;
@@ -514,7 +514,7 @@ regBtn.addEventListener('click', async ()=>{
   const res = await registerUser(email, nick, age, pw, avatarDataUrl);
   if(!res.ok){ regMsg.style.color='var(--danger)'; regMsg.textContent = res.msg; return; }
   regMsg.style.color='#228822';
-  regMsg.textContent = `Зарегистрировано. Код подтверждения (демо): ${res.code}. Войдите после подтверждения.`;
+  regMsg.textContent = `Registered successfully. Confirmation code (demo): ${res.code}. Login after confirming.`;
   // fill login email
   loginEmail.value = email;
 });
@@ -525,10 +525,10 @@ regCancel.addEventListener('click', ()=> { regEmail.value=''; regNick.value=''; 
 loginBtn.addEventListener('click', async ()=>{
   const email = loginEmail.value.trim().toLowerCase(); const pw = loginPassword.value || '';
   loginMsg.style.color='var(--muted)';
-  if(!email||!pw){ loginMsg.textContent='Введите почту и пароль.'; return; }
+  if(!email||!pw){ loginMsg.textContent='Enter email and password.'; return; }
   const res = await loginUser(email, pw);
   if(!res.ok){ loginMsg.style.color='var(--danger)'; loginMsg.textContent = res.msg; return; }
-  loginMsg.style.color='#228822'; loginMsg.textContent='Вход выполнен.';
+  loginMsg.style.color='#228822'; loginMsg.textContent='Login successful.';
   updateAccountButton(); showTab('profile'); updateProfilePane();
 });
 
@@ -536,18 +536,18 @@ loginBtn.addEventListener('click', async ()=>{
 function updateAccountButton(){
   const u = getCurrentUser();
   if(u && u.avatar){
-    accountBtn.innerHTML = `<img src="${u.avatar}" class="avatar-small" alt="Аватар"> ${u.nick || 'Аккаунт'}`;
+    accountBtn.innerHTML = `<img src="${u.avatar}" class="avatar-small" alt="Avatar"> ${u.nick || 'Account'}`;
   } else if(u){
-    accountBtn.innerHTML = `<img src="" class="avatar-small" style="display:none"> ${u.nick || 'Аккаунт'}`;
+    accountBtn.innerHTML = `<img src="" class="avatar-small" style="display:none"> ${u.nick || 'Account'}`;
   } else {
-    accountBtn.innerHTML = 'Аккаунт';
+    accountBtn.innerHTML = 'Account';
   }
 }
 
 function updateProfilePane(){
   const u = getCurrentUser();
-  if(!u){ profileInfo.innerHTML = '<em>Вы не вошли. Войдите или зарегистрируйтесь.</em>'; profileAvatarImg.style.display='none'; profileMsg.textContent=''; return; }
-  profileInfo.innerHTML = `<strong>${u.nick}</strong><br>Почта: ${u.email}<br>Возраст: ${u.age}<br>Подтверждена: ${u.confirmed ? 'да' : 'нет'}`;
+  if(!u){ profileInfo.innerHTML = '<em>You are not logged in. Login or register.</em>'; profileAvatarImg.style.display='none'; profileMsg.textContent=''; return; }
+  profileInfo.innerHTML = `<strong>${u.nick}</strong><br>Email: ${u.email}<br>Age: ${u.age}<br>Confirmed: ${u.confirmed ? 'yes' : 'no'}`;
   if(u.avatar){ profileAvatarImg.src = u.avatar; profileAvatarImg.style.display='block'; } else { profileAvatarImg.style.display='none'; profileAvatarImg.src=''; }
   profileMsg.textContent = '';
 }
@@ -559,31 +559,31 @@ profileAvatarInput.addEventListener('change', e=>{
 });
 
 saveAvatarBtn.addEventListener('click', ()=>{
-  const u = getCurrentUser(); if(!u){ profileMsg.textContent='Войдите, чтобы сохранить аватар.'; return; }
+  const u = getCurrentUser(); if(!u){ profileMsg.textContent='Login to save your avatar.'; return; }
   // if file selected, save it
   const f = profileAvatarInput.files && profileAvatarInput.files[0];
-  if(!f){ profileMsg.textContent='Выберите изображение.'; return; }
+  if(!f){ profileMsg.textContent='Select an image.'; return; }
   const reader = new FileReader();
-  reader.onload = ()=>{ const dataUrl = reader.result; const users = loadUsers(); users[u.email].avatar = dataUrl; saveUsers(users); profileMsg.style.color='#228822'; profileMsg.textContent='Аватар сохранён.'; updateAccountButton(); updateProfilePane(); };
+  reader.onload = ()=>{ const dataUrl = reader.result; const users = loadUsers(); users[u.email].avatar = dataUrl; saveUsers(users); profileMsg.style.color='#228822'; profileMsg.textContent='Avatar saved.'; updateAccountButton(); updateProfilePane(); };
   reader.readAsDataURL(f);
 });
 
-logoutBtn.addEventListener('click', ()=>{ logoutUser(); updateAccountButton(); showTab('login'); profileMsg.textContent='Вы вышли.'; });
+logoutBtn.addEventListener('click', ()=>{ logoutUser(); updateAccountButton(); showTab('login'); profileMsg.textContent='You have logged out.'; });
 
 confirmCodeBtn.addEventListener('click', ()=>{
   const code = confirmCodeInput.value.trim(); const u = getCurrentUser();
-  if(!u){ profileMsg.style.color='var(--danger)'; profileMsg.textContent='Войдите для подтверждения.'; return; }
+  if(!u){ profileMsg.style.color='var(--danger)'; profileMsg.textContent='Login to confirm.'; return; }
   const res = confirmUser(u.email, code);
-  if(res.ok){ profileMsg.style.color='#228822'; profileMsg.textContent='Почта подтверждена.'; updateProfilePane(); updateAccountButton(); } else { profileMsg.style.color='var(--danger)'; profileMsg.textContent = res.msg; }
+  if(res.ok){ profileMsg.style.color='#228822'; profileMsg.textContent='Email confirmed.'; updateProfilePane(); updateAccountButton(); } else { profileMsg.style.color='var(--danger)'; profileMsg.textContent = res.msg; }
 });
 
 /* Stats UI */
 function updateStatsPane(){
   const u = getCurrentUser();
-  if(!u){ $('statsSummary').textContent='Войдите, чтобы просмотреть результаты.'; statsTableBody.innerHTML=''; return; }
-  const stats = u.stats || []; $('statsSummary').textContent = `Всего записей: ${stats.length}`;
+  if(!u){ $('statsSummary').textContent='Login to view your results.'; statsTableBody.innerHTML=''; return; }
+  const stats = u.stats || []; $('statsSummary').textContent = `Total entries: ${stats.length}`;
   const rows = (stats.slice().reverse()).map(s=>{
-    const img = s.imageId && s.imageId.startsWith('uploaded:') ? 'Загруженное' : (presets.find(p=>p.id===s.imageId)?.title || s.imageId || 'Картинка');
+    const img = s.imageId && s.imageId.startsWith('uploaded:') ? 'Uploaded' : (presets.find(p=>p.id===s.imageId)?.title || s.imageId || 'Image');
     return `<tr><td>${img}</td><td>${s.cols}×${s.rows}</td><td>${formatTime(s.timeMs)}</td><td>${new Date(s.date).toLocaleString()}</td></tr>`;
   }).join('');
   statsTableBody.innerHTML = rows;
@@ -591,9 +591,9 @@ function updateStatsPane(){
 
 /* Resend confirmation: show code (demo) */
 function resendConfirmationForCurrentUser(){
-  const u = getCurrentUser(); if(!u){ profileMsg.textContent='Войдите.'; return; }
+  const u = getCurrentUser(); if(!u){ profileMsg.textContent='Login.'; return; }
   const res = resendConfirmation(u.email);
-  if(res.ok){ profileMsg.style.color='#228822'; profileMsg.textContent = `Код подтверждения (демо): ${res.code}`; } else { profileMsg.style.color='var(--danger)'; profileMsg.textContent = res.msg; }
+  if(res.ok){ profileMsg.style.color='#228822'; profileMsg.textContent = `Confirmation code (demo): ${res.code}`; } else { profileMsg.style.color='var(--danger)'; profileMsg.textContent = res.msg; }
 }
 
 /* hook up simple handlers for complete overlay & menu */
@@ -624,7 +624,7 @@ $('menuOverlay').addEventListener('click', e=>{ if(e.target === $('menuOverlay')
 accountOverlay.addEventListener('click', e=>{ if(e.target === accountOverlay) closeAccount(); });
 
 /* initial message */
-messageEl.textContent = 'Нажмите "Меню", чтобы выбрать картинку и размер. Зарегистрируйтесь и загрузите аватар для сохранения результатов.';
+messageEl.textContent = 'Click "Menu" to select an image and size. Register and upload an avatar to save your results.';
 </script>
 
 </body>
