@@ -160,7 +160,7 @@ main {
       <label style="display:flex;align-items:center;gap:6px;">
         <input type="checkbox" id="enableCheck" checked> Check positions
       </label>
-      <div style="margin-left:auto;color:#666;font-size:0.95rem;">Перетаскивайте плитки или кликайте чтобы обменять</div>
+      <div style="margin-left:auto;color:#666;font-size:0.95rem;">Drag or click on tiles to rearrange them</div>
     </div>
 
     <div id="puzzle" aria-label="Puzzle area"></div>
@@ -170,7 +170,7 @@ main {
       <div id="previewPuzzle"></div>
     </div>
 
-    <div id="message" aria-live="polite">Нажмите "Меню" вверху, чтобы выбрать картинку и размер.</div>
+    <div id="message" aria-live="polite">Click "Menu" at the top to select an image and size.</div>
     <h3 id="timer">Time: 0:00:000</h3>
   </div>
 </main>
@@ -190,7 +190,7 @@ main {
 
 <!-- Menu overlay (toggleable) -->
 <div id="menuOverlay" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="menu" role="document" aria-label="Меню выбора картинки и размера">
+  <div class="menu" role="document" aria-label="Image and size selection menu">
     <div id="menuSidebar">
       <h3 style="margin:0 0 8px 0;">Choose image</h3>
       <div id="presetList"></div>
@@ -210,7 +210,7 @@ main {
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;">
-        <label>Пользовательский:
+        <label>Custom:
           <input type="number" id="menuCols" min="1" max="20" value="5" style="width:70px;margin-left:6px">
           ×
           <input type="number" id="menuRows" min="1" max="20" value="6" style="width:70px;margin-left:6px">
@@ -222,7 +222,7 @@ main {
         <button id="menuUseUploaded" class="btn">Use uploaded</button>
         <button id="menuClose" class="btn">Close</button>
       </div>
-      <div style="color:#666;font-size:0.9rem;margin-top:6px;">Меню открывается поверх страницы; нажмите «Меню» ещё раз чтобы закрыть.</div>
+      <div style="color:#666;font-size:0.9rem;margin-top:6px;">The Menu opens on top of the page; click "Menu" again to close it.</div>
     </div>
   </div>
 </div>
@@ -330,7 +330,7 @@ imageUpload.addEventListener('change', e=>{
   if (uploadedURL) URL.revokeObjectURL(uploadedURL);
   uploadedURL = URL.createObjectURL(f);
   imageURL = uploadedURL;
-  message.textContent = 'Загружено пользовательское изображение. Откройте меню и нажмите "Создать пазл".';
+  message.textContent = 'A custom image has been uploaded. Open the menu and click "Create Puzzle.';
 });
 
 /* ===== Preset size buttons ===== */
@@ -345,18 +345,18 @@ presetSizes.querySelectorAll('button').forEach(btn=>{
 
 /* Use uploaded from menu */
 menuUseUploaded.addEventListener('click', ()=>{
-  if (!uploadedURL) return alert('Сначала загрузите свою картинку в меню (файл).');
+  if (!uploadedURL) return alert('First, upload your image to the menu (file).');
   imageURL = uploadedURL;
   selectedPreset = null;
   document.querySelectorAll('.presetItem').forEach(i=>i.classList.remove('selected'));
-  message.textContent = 'Используется загруженная картинка. Нажмите "Создать пазл".';
+  message.textContent = 'The uploaded image is used. Click "Create Puzzle."';
 });
 
 /* Create puzzle from menu */
 menuCreate.addEventListener('click', ()=>{
   const c = Math.max(1, Math.min(30, +menuCols.value || 1));
   const r = Math.max(1, Math.min(30, +menuRows.value || 1));
-  if (!imageURL) return alert('Выберите или загрузите картинку в меню.');
+  if (!imageURL) return alert('Select or upload an image from the menu.');
   createPuzzle(imageURL, c, r);
   closeMenu();
 });
@@ -418,7 +418,7 @@ function createPuzzle(imgSrc, c, r) {
   resetTimer();
   previewContainer.style.display = 'none';
   previewPuzzle.innerHTML = '';
-  message.textContent = 'Пазл создан. Начните собирать!';
+  message.textContent = 'The puzzle is complete. Start solving!';
 }
 
 /* Shuffle */
@@ -485,14 +485,14 @@ function finishPuzzle() {
   if (solvedAlready) return;
   solvedAlready = true;
   stopTimer();
-  message.textContent = 'Пазл собран! 🎉';
-  overlayTime.textContent = `Время: ${formatElapsedTime()}`;
+  message.textContent = 'The puzzle is complete! 🎉';
+  overlayTime.textContent = `Time: ${formatElapsedTime()}`;
   showComplete();
 }
 function showComplete() { overlayComplete.style.display='flex'; overlayComplete.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
 function hideComplete() { overlayComplete.style.display='none'; overlayComplete.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
 
-overlayShuffle.addEventListener('click', ()=>{ hideComplete(); shuffle(); resetTimer(); solvedAlready=false; message.textContent='Пазл перемешан'; });
+overlayShuffle.addEventListener('click', ()=>{ hideComplete(); shuffle(); resetTimer(); solvedAlready=false; message.textContent='The puzzle is mixed up'; });
 overlayNew.addEventListener('click', ()=>{ hideComplete(); openMenu(); });
 overlayClose.addEventListener('click', ()=>{ hideComplete(); });
 
@@ -510,14 +510,14 @@ function startTimer() {
   }, 50);
 }
 function stopTimer(){ clearInterval(timer); }
-function resetTimer(){ clearInterval(timer); started=false; startTime=null; timerDisplay.textContent='Время: 0:00:000'; }
+function resetTimer(){ clearInterval(timer); started=false; startTime=null; timerDisplay.textContent='Time: 0:00:000'; }
 function formatElapsedTime(){ if (!startTime) return '0:00:000'; const t = performance.now()-startTime; const ms=Math.floor(t%1000).toString().padStart(3,'0'); const sec=Math.floor(t/1000)%60; const min=Math.floor(t/60000); return `${min}:${sec.toString().padStart(2,'0')}:${ms}`; }
 
 /* Preview (assembled look) */
 previewBtn.addEventListener('click', ()=>{
   if (!imageURL) return alert('Choose image from menu');
   if (previewContainer.style.display === 'block') {
-    previewContainer.style.display='none'; previewContainer.setAttribute('aria-hidden','true'); previewBtn.textContent='Показать картинку';
+    previewContainer.style.display='none'; previewContainer.setAttribute('aria-hidden','true'); previewBtn.textContent='Show image';
     return;
   }
   const canvasSize = 500;
@@ -539,7 +539,7 @@ previewBtn.addEventListener('click', ()=>{
   }
   previewContainer.style.display='block';
   previewContainer.setAttribute('aria-hidden','false');
-  previewBtn.textContent='Скрыть картинку';
+  previewBtn.textContent='Hide image';
 });
 
 /* Touch support (mobile drag) */
@@ -557,11 +557,11 @@ enableCheckEl.addEventListener('change', () => {
   if (enableCheckEl.checked) {
     // Run check to show current correctness
     checkPositions();
-    message.textContent = 'Проверка позиций включена — правильные/неправильные плитки подсвечены.';
+    message.textContent = 'Position checking is enabled. Correct/incorrect tiles are highlighted.';
   } else {
     // Clear visual markers
     document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
-    message.textContent = 'Проверка позиций отключена — пазл будет считаться собранным только при точном порядке.';
+    message.textContent = 'Position checking is disabled. The puzzle will only be considered solved if it is in the correct order.';
   }
 });
 
