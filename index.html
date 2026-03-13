@@ -422,7 +422,7 @@ function createPuzzle(imgSrc, c, r) {
 }
 
 /* Shuffle */
-shuffleBtn.addEventListener('click', ()=>{ shuffle(); solvedAlready=false; hideComplete(); resetTimer(); message.textContent='Пазл перемешан'; });
+shuffleBtn.addEventListener('click', ()=>{ shuffle(); solvedAlready=false; hideComplete(); resetTimer(); message.textContent='The puzzle is shuffled'; });
 function shuffle() {
   if (!cells.length) return;
   const pieces = cells.map(c=>c.firstChild);
@@ -548,7 +548,7 @@ function onTouchStart(e){ e.preventDefault(); const piece = e.currentTarget; tou
 function onTouchMove(e){ if (!touchDrag.piece) return; e.preventDefault(); const touch = e.changedTouches[0]; const el = document.elementFromPoint(touch.clientX, touch.clientY); const cell = el ? el.closest('.cell') : null; if (cell !== touchDrag.currentTargetCell){ if (touchDrag.currentTargetCell) touchDrag.currentTargetCell.classList.remove('drop-target'); touchDrag.currentTargetCell = cell; if (cell) cell.classList.add('drop-target'); } }
 function onTouchEnd(e){ if (!touchDrag.piece) return; const piece = touchDrag.piece; const targetCell = touchDrag.currentTargetCell; piece.classList.remove('dragging'); if (targetCell && targetCell !== touchDrag.srcCell){ const targetPiece = targetCell.firstChild; const srcCell = touchDrag.srcCell; srcCell.appendChild(targetPiece); targetCell.appendChild(piece); if (enableCheckEl.checked) checkPositions(); else if (isSolved()) finishPuzzle(); } document.querySelectorAll('.cell.drop-target').forEach(el=>el.classList.remove('drop-target')); touchDrag.piece=null; touchDrag.srcCell=null; touchDrag.currentTargetCell=null; }
 
-/* ===== Toggleable "Проверять позиции" behavior ===== */
+/* ===== Toggleable "Check positions" behavior ===== */
 /* When the checkbox is changed, apply immediate effect:
    - If enabled: run checkPositions() to show current green/red borders.
    - If disabled: clear all borders (no visual checking).
@@ -565,7 +565,7 @@ enableCheckEl.addEventListener('change', () => {
   }
 });
 
-message.textContent = 'Нажмите "Меню" вверху, чтобы выбрать картинку и размер. Опция "Проверять позиции" можно включать/выключать.';
+message.textContent = 'Click “Menu” at the top to select an image and size. The “Check positions” option can be turned on or off.';
 </script>
 </body>
 </html>
