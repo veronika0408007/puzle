@@ -4,6 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Online puzzle</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root { --card-bg: #fff; --accent: #2196f3; --muted: #666; }
 body {
@@ -99,25 +100,176 @@ main {
 
 #message { margin-top:8px; color:var(--muted); font-size:0.95rem; }
 
-#overlayComplete {
+/* Overlay styles */
+.overlay {
   position:fixed; inset:0; display:none;
   background:rgba(0,0,0,0.55);
   align-items:center; justify-content:center;
   z-index:2000; padding:20px;
 }
-#overlayComplete .modal {
-  background:#fff; padding:18px; border-radius:8px; width:420px; max-width:95%; text-align:center;
-  box-shadow:0 10px 30px rgba(0,0,0,0.28);
-}
-.modal h2 { margin:8px 0; }
-.modal p { margin:8px 0 14px; color:#444; }
+.overlay.active { display:flex; }
 
-/* Menu overlay (toggleable from top button) */
+.modal {
+  background:#fff; padding:24px; border-radius:8px; width:500px; max-width:95%;
+  box-shadow:0 10px 30px rgba(0,0,0,0.28);
+  max-height:90vh; overflow-y:auto;
+}
+
+.modal h2 { margin:0 0 20px 0; }
+.modal p { margin:8px 0; color:#555; }
+
+.form-group {
+  margin-bottom:16px;
+  display:flex;
+  flex-direction:column;
+}
+
+.form-group label {
+  margin-bottom:6px;
+  font-weight:500;
+  color:#333;
+}
+
+.form-group input,
+.form-group textarea {
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  font-size:0.95rem;
+  font-family:inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(33,150,243,0.1);
+}
+
+.form-actions {
+  display:flex;
+  gap:8px;
+  margin-top:20px;
+}
+
+.form-actions button {
+  flex:1;
+}
+
+.auth-links {
+  text-align:center;
+  margin-top:16px;
+  color:#666;
+  font-size:0.9rem;
+}
+
+.auth-links a {
+  color:var(--accent);
+  cursor:pointer;
+  text-decoration:none;
+  border-bottom:1px solid var(--accent);
+}
+
+.auth-links a:hover { text-decoration:underline; }
+
+.error-message {
+  color:#d32f2f;
+  background:#ffebee;
+  padding:10px;
+  border-radius:4px;
+  margin-bottom:12px;
+  font-size:0.9rem;
+}
+
+.success-message {
+  color:#388e3c;
+  background:#e8f5e9;
+  padding:10px;
+  border-radius:4px;
+  margin-bottom:12px;
+  font-size:0.9rem;
+}
+
+.user-info {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.user-info small {
+  color:#999;
+  font-size:0.85rem;
+}
+
+/* Профиль */
+.profile-section {
+  margin-top:20px;
+  padding-top:20px;
+  border-top:1px solid #eee;
+}
+
+.profile-stats {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+  margin:16px 0;
+}
+
+.stat-card {
+  background:#f5f5f5;
+  padding:12px;
+  border-radius:6px;
+  text-align:center;
+}
+
+.stat-card .stat-value {
+  font-size:1.5rem;
+  font-weight:bold;
+  color:var(--accent);
+}
+
+.stat-card .stat-label {
+  font-size:0.85rem;
+  color:#666;
+  margin-top:4px;
+}
+
+.puzzle-item {
+  display:flex;
+  gap:12px;
+  padding:12px;
+  border:1px solid #eee;
+  border-radius:6px;
+  margin-bottom:8px;
+}
+
+.puzzle-item img {
+  width:80px;
+  height:80px;
+  object-fit:cover;
+  border-radius:4px;
+}
+
+.puzzle-item-info {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.puzzle-item-info small {
+  color:#999;
+}
+
+/* Menu overlay */
 #menuOverlay {
   position:fixed; inset:0; display:none;
   background:rgba(0,0,0,0.45);
   align-items:center; justify-content:center;
   z-index:2100; padding:18px;
+}
+#menuOverlay.active {
+  display:flex;
 }
 #menuOverlay .menu {
   width:760px; max-width:95%; background:var(--card-bg); border-radius:8px; padding:14px;
@@ -138,15 +290,37 @@ main {
 @media (max-width:800px) {
   #menuOverlay .menu { flex-direction:column; }
   #menuSidebar { width:100%; }
+  .profile-stats {
+    grid-template-columns:1fr;
+  }
+  .puzzle-item {
+    flex-direction:column;
+    align-items:center;
+  }
+  .puzzle-item img {
+    width:100%;
+    height:150px;
+  }
 }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Online puzzle</h1>
+  <h1>🧩 Online puzzle</h1>
 
   <div id="topControls">
+    <div id="authStatus" class="user-info" style="display:none;">
+      <span id="userDisplayName"></span>
+      <small id="userEmail"></small>
+      <button id="profileBtn" class="btn">Профиль</button>
+      <button id="logoutBtn" class="btn">Выход</button>
+    </div>
+    <div id="notAuthStatus" style="display:none;align-items:center;gap:8px;">
+      <span style="color:#666;font-size:0.9rem;">🎮 Играй без регистрации!</span>
+      <button id="loginBtn" class="btn">Вход</button>
+      <button id="registerBtn" class="btn primary">Регистрация</button>
+    </div>
     <button id="menuToggleBtn" class="btn">Menu</button>
     <button id="previewBtn" class="btn">Preview</button>
     <button id="shuffleBtn" class="btn" disabled>Shuffle</button>
@@ -175,21 +349,167 @@ main {
   </div>
 </main>
 
-<!-- Completion overlay -->
-<div id="overlayComplete" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modal" role="document">
-    <h2> uhoo, the puzzle is complete!🎉</h2>
-    <p id="overlayTime">Time: 0:00:000</p>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button id="overlayShuffle" class="btn">Shuffle</button>
-      <button id="overlayNew" class="btn primary">Create new puzzle</button>
-      <button id="overlayClose" class="btn">Close</button>
+<!-- ==================== МОДАЛЬНЫЕ ОКНА ==================== -->
+
+<!-- Регистрация -->
+<div id="registerOverlay" class="overlay">
+  <div class="modal">
+    <h2>Регистрация</h2>
+    <div id="registerMessage"></div>
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="regEmail">Email</label>
+        <input type="email" id="regEmail" required>
+      </div>
+      <div class="form-group">
+        <label for="regPassword">Пароль</label>
+        <input type="password" id="regPassword" required>
+      </div>
+      <div class="form-group">
+        <label for="regUsername">Никнейм</label>
+        <input type="text" id="regUsername" required>
+      </div>
+      <div class="form-group">
+        <label for="regAge">Возраст</label>
+        <input type="number" id="regAge" min="5" max="120" required>
+      </div>
+      <div class="form-group">
+        <label for="regAbout">О себе</label>
+        <textarea id="regAbout" rows="3" placeholder="Расскажи о себе..."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary">Зарегистрироваться</button>
+        <button type="button" class="btn" id="regClose">Отмена</button>
+      </div>
+    </form>
+    <div class="auth-links">
+      Уже есть аккаунт? <a id="switchToLogin">Войти</a>
     </div>
   </div>
 </div>
 
-<!-- Menu overlay (toggleable) -->
-<div id="menuOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+<!-- Вход -->
+<div id="loginOverlay" class="overlay">
+  <div class="modal">
+    <h2>Вход</h2>
+    <div id="loginMessage"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Пароль</label>
+        <input type="password" id="loginPassword" required>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary">Войти</button>
+        <button type="button" class="btn" id="loginClose">Отмена</button>
+      </div>
+    </form>
+    <div class="auth-links">
+      Нет аккаунта? <a id="switchToRegister">Зарегистрироваться</a>
+    </div>
+  </div>
+</div>
+
+<!-- Профиль -->
+<div id="profileOverlay" class="overlay">
+  <div class="modal">
+    <h2>Мой профиль</h2>
+    <div id="profileMessage"></div>
+    
+    <div class="profile-section">
+      <h3>Информация</h3>
+      <div class="form-group">
+        <label>Никнейм</label>
+        <input type="text" id="profileUsername" disabled>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="profileEmail" disabled>
+      </div>
+      <div class="form-group">
+        <label>Возраст</label>
+        <input type="number" id="profileAge" disabled>
+      </div>
+      <div class="form-group">
+        <label>О себе</label>
+        <textarea id="profileAbout" rows="3" disabled></textarea>
+      </div>
+      <button id="editProfileBtn" class="btn">Редактировать</button>
+    </div>
+
+    <div class="profile-section">
+      <h3>Статистика</h3>
+      <div class="profile-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="totalPuzzles">0</div>
+          <div class="stat-label">Собрано пазлов</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="bestTime">-</div>
+          <div class="stat-label">Лучшее время</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalImages">0</div>
+          <div class="stat-label">Загруженных картинок</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h3>История пазлов (последние 10)</h3>
+      <div id="puzzleHistoryList" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+
+    <div class="form-actions">
+      <button id="profileClose" class="btn">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Редактирование профиля -->
+<div id="editProfileOverlay" class="overlay">
+  <div class="modal">
+    <h2>Редактировать профиль</h2>
+    <div id="editProfileMessage"></div>
+    <form id="editProfileForm">
+      <div class="form-group">
+        <label for="editUsername">Никнейм</label>
+        <input type="text" id="editUsername" required>
+      </div>
+      <div class="form-group">
+        <label for="editAge">Возраст</label>
+        <input type="number" id="editAge" min="5" max="120" required>
+      </div>
+      <div class="form-group">
+        <label for="editAbout">О себе</label>
+        <textarea id="editAbout" rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary">Сохранить</button>
+        <button type="button" class="btn" id="editProfileClose">Отмена</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Завершение пазла -->
+<div id="overlayComplete" class="overlay" role="dialog">
+  <div class="modal" role="document">
+    <h2>🎉 Пазл собран!</h2>
+    <p id="overlayTime">⏱️ Время: 0:00:000 | 💡 Подсказок: 0</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button id="overlayShuffle" class="btn">Перемешать</button>
+      <button id="overlayNew" class="btn primary">Новый пазл</button>
+      <button id="overlayClose" class="btn">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Меню пазла -->
+<div id="menuOverlay" class="overlay" role="dialog">
   <div class="menu" role="document" aria-label="Image and size selection menu">
     <div id="menuSidebar">
       <h3 style="margin:0 0 8px 0;">Choose image</h3>
@@ -228,17 +548,403 @@ main {
 </div>
 
 <script>
-/* ===== Presets ===== */
+// ==================== SUPABASE SETUP ====================
+const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+const SUPABASE_KEY = 'YOUR_PUBLIC_ANON_KEY';
+
+const { createClient } = window.supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ==================== ГЛОБАЛЬНОЕ СОСТОЯНИЕ ====================
+let currentUser = null;
+
+// ==================== UTILITY FUNCTIONS ====================
+
+async function checkAuth() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      await loadUserMetadata();
+      return true;
+    } else {
+      currentUser = null;
+      return false;
+    }
+  } catch (err) {
+    console.error('Auth check error:', err);
+    return false;
+  }
+}
+
+async function loadUserMetadata() {
+  if (!currentUser) return;
+  try {
+    const { data } = await supabase
+      .from('users')
+      .select('username, age, about, avatar_url')
+      .eq('id', currentUser.id)
+      .single();
+    
+    if (data) {
+      currentUser.metadata = {
+        username: data.username,
+        age: data.age,
+        about: data.about,
+        avatar_url: data.avatar_url
+      };
+    }
+  } catch (err) {
+    console.error('Load metadata error:', err);
+  }
+}
+
+async function logout() {
+  try {
+    await supabase.auth.signOut();
+    currentUser = null;
+  } catch (err) {
+    console.error('Logout error:', err);
+  }
+}
+
+function showMessage(elementId, message, type = 'error') {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.innerHTML = `<div class="${type}-message">${message}</div>`;
+  if (type === 'success') {
+    setTimeout(() => el.innerHTML = '', 3000);
+  }
+}
+
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const milliseconds = ms % 1000;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(3, '0')}`;
+}
+
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) modal.classList.add('active');
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) modal.classList.remove('active');
+}
+
+// ==================== СОХРАНЕНИЕ ПРОГРЕССА ====================
+
+async function savePuzzleResult(imageUrl, cols, rows, timeMs, hintsUsed) {
+  if (!currentUser) {
+    console.log('💾 Пользователь не авторизован. Результат не сохраняется.');
+    return;
+  }
+
+  try {
+    const { error } = await supabase.from('puzzles').insert({
+      user_id: currentUser.id,
+      image_url: imageUrl,
+      cols: cols,
+      rows: rows,
+      time_ms: timeMs,
+      hints: hintsUsed
+    });
+
+    if (error) throw error;
+    console.log('✅ Результат пазла сохранен (подсказок: ' + hintsUsed + ')');
+  } catch (err) {
+    console.error('❌ Ошибка сохранения результата:', err);
+  }
+}
+
+async function addUsedImage(imageUrl) {
+  if (!currentUser) {
+    console.log('💾 Пользователь не авторизован. Картинка не сохранится.');
+    return;
+  }
+
+  try {
+    const { data: existing } = await supabase
+      .from('used_images')
+      .select('id')
+      .eq('user_id', currentUser.id)
+      .eq('image_url', imageUrl)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      console.log('💾 Картинка уже в истории');
+      return;
+    }
+
+    const { error } = await supabase.from('used_images').insert({
+      user_id: currentUser.id,
+      image_url: imageUrl
+    });
+
+    if (error) throw error;
+    console.log('✅ Картинка добавлена в историю');
+  } catch (err) {
+    console.error('❌ Ошибка добавления картинки:', err);
+  }
+}
+
+// ==================== AUTH HANDLERS ====================
+
+const registerBtn = document.getElementById('registerBtn');
+const loginBtn = document.getElementById('loginBtn');
+const registerForm = document.getElementById('registerForm');
+const loginForm = document.getElementById('loginForm');
+const editProfileForm = document.getElementById('editProfileForm');
+const logoutBtn = document.getElementById('logoutBtn');
+const profileBtn = document.getElementById('profileBtn');
+
+registerBtn.addEventListener('click', () => openModal('registerOverlay'));
+loginBtn.addEventListener('click', () => openModal('loginOverlay'));
+document.getElementById('regClose')?.addEventListener('click', () => closeModal('registerOverlay'));
+document.getElementById('loginClose')?.addEventListener('click', () => closeModal('loginOverlay'));
+document.getElementById('profileClose')?.addEventListener('click', () => closeModal('profileOverlay'));
+document.getElementById('editProfileClose')?.addEventListener('click', () => closeModal('editProfileOverlay'));
+
+document.getElementById('switchToLogin')?.addEventListener('click', () => {
+  closeModal('registerOverlay');
+  openModal('loginOverlay');
+});
+
+document.getElementById('switchToRegister')?.addEventListener('click', () => {
+  closeModal('loginOverlay');
+  openModal('registerOverlay');
+});
+
+registerForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPassword').value;
+  const username = document.getElementById('regUsername').value;
+  const age = parseInt(document.getElementById('regAge').value);
+  const about = document.getElementById('regAbout').value;
+
+  if (age < 5 || age > 120) {
+    showMessage('registerMessage', 'Возраст должен быть от 5 до 120 лет', 'error');
+    return;
+  }
+
+  if (username.length < 3) {
+    showMessage('registerMessage', 'Никнейм должен быть от 3 символов', 'error');
+    return;
+  }
+
+  try {
+    const { data, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username, age, about }
+      }
+    });
+
+    if (authError) throw authError;
+
+    const { error: dbError } = await supabase.from('users').insert({
+      id: data.user.id,
+      username,
+      email,
+      age,
+      about
+    });
+
+    if (dbError) throw dbError;
+
+    showMessage('registerMessage', 'Проверьте почту для подтверждения регистрации', 'success');
+    
+    setTimeout(() => {
+      closeModal('registerOverlay');
+      registerForm.reset();
+    }, 2000);
+
+  } catch (err) {
+    showMessage('registerMessage', err.message, 'error');
+  }
+});
+
+loginForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+
+    currentUser = data.user;
+    await loadUserMetadata();
+    
+    updateUIAfterAuth();
+    
+    closeModal('loginOverlay');
+    loginForm.reset();
+    
+    showMessage('message', 'Успешный вход! 🎉', 'success');
+
+  } catch (err) {
+    showMessage('loginMessage', err.message, 'error');
+  }
+});
+
+logoutBtn?.addEventListener('click', async () => {
+  try {
+    await logout();
+    updateUIBeforeAuth();
+    showMessage('message', 'Вы вышли из аккаунта', 'success');
+  } catch (err) {
+    console.error('Logout error:', err);
+  }
+});
+
+profileBtn?.addEventListener('click', async () => {
+  if (!currentUser) {
+    showMessage('message', 'Для просмотра профиля необходимо войти в аккаунт', 'error');
+    setTimeout(() => openModal('loginOverlay'), 500);
+    return;
+  }
+  
+  await loadProfileData();
+  openModal('profileOverlay');
+});
+
+document.getElementById('editProfileBtn')?.addEventListener('click', () => {
+  closeModal('profileOverlay');
+  openModal('editProfileOverlay');
+});
+
+editProfileForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const username = document.getElementById('editUsername').value;
+  const age = parseInt(document.getElementById('editAge').value);
+  const about = document.getElementById('editAbout').value;
+
+  try {
+    const { error: dbError } = await supabase.from('users')
+      .update({ username, age, about })
+      .eq('id', currentUser.id);
+
+    if (dbError) throw dbError;
+
+    await supabase.auth.updateUser({
+      data: { username, age, about }
+    });
+
+    currentUser.metadata = { username, age, about };
+
+    showMessage('editProfileMessage', 'Профиль обновлен!', 'success');
+    
+    setTimeout(() => {
+      closeModal('editProfileOverlay');
+      updateUIAfterAuth();
+    }, 1000);
+
+  } catch (err) {
+    showMessage('editProfileMessage', err.message, 'error');
+  }
+});
+
+async function loadProfileData() {
+  if (!currentUser) return;
+
+  try {
+    document.getElementById('profileUsername').value = currentUser.metadata?.username || '';
+    document.getElementById('profileEmail').value = currentUser.email || '';
+    document.getElementById('profileAge').value = currentUser.metadata?.age || '';
+    document.getElementById('profileAbout').value = currentUser.metadata?.about || '';
+
+    const { data: puzzles, error: puzzleError } = await supabase
+      .from('puzzles')
+      .select('*')
+      .eq('user_id', currentUser.id);
+
+    if (puzzleError) throw puzzleError;
+
+    const { data: images, error: imageError } = await supabase
+      .from('used_images')
+      .select('*')
+      .eq('user_id', currentUser.id);
+
+    if (imageError) throw imageError;
+
+    document.getElementById('totalPuzzles').textContent = puzzles?.length || 0;
+    document.getElementById('totalImages').textContent = images?.length || 0;
+
+    if (puzzles && puzzles.length > 0) {
+      const bestTime = Math.min(...puzzles.map(p => p.time_ms));
+      document.getElementById('bestTime').textContent = formatTime(bestTime);
+    } else {
+      document.getElementById('bestTime').textContent = '-';
+    }
+
+    const historyList = document.getElementById('puzzleHistoryList');
+    historyList.innerHTML = '';
+    
+    if (puzzles && puzzles.length > 0) {
+      const sorted = puzzles.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      
+      sorted.slice(0, 10).forEach(puzzle => {
+        const item = document.createElement('div');
+        item.className = 'puzzle-item';
+        item.innerHTML = `
+          <img src="${puzzle.image_url}" alt="Puzzle" onerror="this.src='https://via.placeholder.com/80'">
+          <div class="puzzle-item-info">
+            <div><strong>${puzzle.cols} × ${puzzle.rows}</strong></div>
+            <div>⏱️ ${formatTime(puzzle.time_ms)}</div>
+            <div>💡 Подсказок: ${puzzle.hints || 0}</div>
+            <small>${new Date(puzzle.created_at).toLocaleDateString('ru-RU')}</small>
+          </div>
+        `;
+        historyList.appendChild(item);
+      });
+    } else {
+      historyList.innerHTML = '<p style="color:#999;text-align:center;">Ещё нет собранных пазлов</p>';
+    }
+
+    document.getElementById('editUsername').value = currentUser.metadata?.username || '';
+    document.getElementById('editAge').value = currentUser.metadata?.age || '';
+    document.getElementById('editAbout').value = currentUser.metadata?.about || '';
+
+  } catch (err) {
+    console.error('Load profile error:', err);
+    showMessage('profileMessage', 'Ошибка загрузки профиля', 'error');
+  }
+}
+
+function updateUIAfterAuth() {
+  document.getElementById('authStatus').style.display = 'flex';
+  document.getElementById('notAuthStatus').style.display = 'none';
+  document.getElementById('userDisplayName').textContent = currentUser.metadata?.username || currentUser.email;
+  document.getElementById('userEmail').textContent = currentUser.email;
+}
+
+function updateUIBeforeAuth() {
+  document.getElementById('authStatus').style.display = 'none';
+  document.getElementById('notAuthStatus').style.display = 'flex';
+}
+
+// ==================== ОСНОВНАЯ ЛОГИКА ПАЗЛА ====================
+
 const presets = [
   { id:'p1', title:'Mountain', url:'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' },
-  { id:'p2', title:'City', url:'https://www.latvia.travel/sites/default/files/styles/mobile_promo/public/media_image/37315458162_8e53834697_k.jpg?itok=E_xOti-8q=80&w=1200&auto=format&fit=crop' },
+  { id:'p2', title:'City', url:'https://www.latvia.travel/sites/default/files/styles/mobile_promo/public/media_image/37315458162_8e53834697_k.jpg?itok=E_xOti-8' },
   { id:'p3', title:'Animals', url:'https://ae01.alicdn.com/kf/Sed9c41c14c834c4883a0faefbc53c9b5C.jpg?q=80&w=1200&auto=format&fit=crop' },
-  { id:'p4', title:'Friends', url:'https://static01.nyt.com/images/2020/02/21/multimedia/21xp-friends/21xp-friends-articleLarge.jpg?quality=75&auto=webp&disable=upscaleq=80&w=1200&auto=format&fit=crop' }
+  { id:'p4', title:'Friends', url:'https://static01.nyt.com/images/2020/02/21/multimedia/21xp-friends/21xp-friends-articleLarge.jpg?quality=75&auto=webp' }
 ];
 
-/* ===== Elements ===== */
-const menuToggleBtn = document.getElementById('menuToggleBtn');
-const menuOverlay = document.getElementById('menuOverlay');
 const presetList = document.getElementById('presetList');
 const presetSizes = document.getElementById('presetSizes');
 const menuCols = document.getElementById('menuCols');
@@ -247,7 +953,6 @@ const menuCreate = document.getElementById('menuCreate');
 const menuUseUploaded = document.getElementById('menuUseUploaded');
 const menuClose = document.getElementById('menuClose');
 const menuUpload = document.getElementById('menuUpload');
-
 const imageUpload = document.getElementById('imageUpload');
 const previewBtn = document.getElementById('previewBtn');
 const shuffleBtn = document.getElementById('shuffleBtn');
@@ -257,14 +962,14 @@ const previewContainer = document.getElementById('previewContainer');
 const previewPuzzle = document.getElementById('previewPuzzle');
 const message = document.getElementById('message');
 const timerDisplay = document.getElementById('timer');
-
+const menuToggleBtn = document.getElementById('menuToggleBtn');
+const menuOverlay = document.getElementById('menuOverlay');
 const overlayComplete = document.getElementById('overlayComplete');
 const overlayTime = document.getElementById('overlayTime');
 const overlayShuffle = document.getElementById('overlayShuffle');
 const overlayNew = document.getElementById('overlayNew');
 const overlayClose = document.getElementById('overlayClose');
 
-/* ===== State ===== */
 let selectedPreset = presets[0];
 let uploadedURL = '';
 let imageURL = selectedPreset.url;
@@ -277,15 +982,15 @@ let timer = null;
 let pieceIdCounter = 0;
 let solvedAlready = false;
 let selectedPiece = null;
+let hintsUsed = 0;
 
-/* ===== Build preset thumbnails ===== */
-presets.forEach(p=>{
+presets.forEach(p => {
   const el = document.createElement('div');
   el.className = 'presetItem';
   el.dataset.id = p.id;
   el.innerHTML = `<img src="${p.url}" alt="${p.title}"><div style="padding:6px;font-size:12px;text-align:center;">${p.title}</div>`;
-  el.addEventListener('click', ()=>{
-    document.querySelectorAll('.presetItem').forEach(i=>i.classList.remove('selected'));
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.presetItem').forEach(i => i.classList.remove('selected'));
     el.classList.add('selected');
     selectedPreset = p;
     imageURL = p.url;
@@ -294,76 +999,85 @@ presets.forEach(p=>{
 });
 if (presetList.firstChild) presetList.firstChild.classList.add('selected');
 
-/* ===== Menu toggle ===== */
-function openMenu() {
-  menuOverlay.style.display = 'flex';
-  menuOverlay.setAttribute('aria-hidden','false');
-  document.body.style.overflow = 'hidden';
-}
-function closeMenu() {
-  menuOverlay.style.display = 'none';
-  menuOverlay.setAttribute('aria-hidden','true');
-  document.body.style.overflow = '';
-}
-menuToggleBtn.addEventListener('click', () => {
-  if (menuOverlay.style.display === 'flex') closeMenu(); else openMenu();
-});
-menuClose.addEventListener('click', closeMenu);
-menuOverlay.addEventListener('click', (e)=> { if (e.target === menuOverlay) closeMenu(); });
-document.addEventListener('keydown', (e)=> { if (e.key==='Escape') { if (menuOverlay.style.display==='flex') closeMenu(); if (overlayComplete.style.display==='flex') hideComplete(); } });
+const menuToggle = () => {
+  if (menuOverlay.classList.contains('active')) closeModal('menuOverlay');
+  else openModal('menuOverlay');
+};
 
-/* ===== Menu upload handling ===== */
-menuUpload.addEventListener('change', e=>{
+menuToggleBtn.addEventListener('click', menuToggle);
+menuClose.addEventListener('click', () => closeModal('menuOverlay'));
+menuOverlay.addEventListener('click', (e) => {
+  if (e.target === menuOverlay) closeModal('menuOverlay');
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (menuOverlay.classList.contains('active')) closeModal('menuOverlay');
+    if (overlayComplete.classList.contains('active')) closeModal('overlayComplete');
+  }
+});
+
+menuUpload.addEventListener('change', async (e) => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   if (uploadedURL) URL.revokeObjectURL(uploadedURL);
   uploadedURL = URL.createObjectURL(f);
   imageURL = uploadedURL;
-  document.querySelectorAll('.presetItem').forEach(i=>i.classList.remove('selected'));
+  document.querySelectorAll('.presetItem').forEach(i => i.classList.remove('selected'));
   selectedPreset = null;
+  
+  await addUsedImage(uploadedURL);
+  
+  if (currentUser) {
+    showMessage('message', '✅ Картинка загружена и сохранена в историю', 'success');
+  } else {
+    message.textContent = '📁 Картинка загружена (результаты не будут сохранены, войдите для сохранения)';
+  }
 });
 
-/* also quick upload */
-imageUpload.addEventListener('change', e=>{
+imageUpload.addEventListener('change', async (e) => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   if (uploadedURL) URL.revokeObjectURL(uploadedURL);
   uploadedURL = URL.createObjectURL(f);
   imageURL = uploadedURL;
-  message.textContent = 'A custom image has been uploaded. Open the menu and click "Create Puzzle.';
+  
+  await addUsedImage(uploadedURL);
+  
+  if (currentUser) {
+    message.textContent = '✅ Картинка загружена и сохранена';
+  } else {
+    message.textContent = '📁 Картинка загружена. Чтобы сохранить результаты — войдите в аккаунт';
+  }
 });
 
-/* ===== Preset size buttons ===== */
-presetSizes.querySelectorAll('button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    presetSizes.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+presetSizes.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    presetSizes.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     menuCols.value = btn.dataset.cols;
     menuRows.value = btn.dataset.rows;
   });
 });
 
-/* Use uploaded from menu */
-menuUseUploaded.addEventListener('click', ()=>{
-  if (!uploadedURL) return alert('First, upload your image to the menu (file).');
+menuUseUploaded.addEventListener('click', () => {
+  if (!uploadedURL) return alert('Upload image first');
   imageURL = uploadedURL;
   selectedPreset = null;
-  document.querySelectorAll('.presetItem').forEach(i=>i.classList.remove('selected'));
-  message.textContent = 'The uploaded image is used. Click "Create Puzzle."';
+  document.querySelectorAll('.presetItem').forEach(i => i.classList.remove('selected'));
 });
 
-/* Create puzzle from menu */
-menuCreate.addEventListener('click', ()=>{
+menuCreate.addEventListener('click', () => {
   const c = Math.max(1, Math.min(30, +menuCols.value || 1));
   const r = Math.max(1, Math.min(30, +menuRows.value || 1));
-  if (!imageURL) return alert('Select or upload an image from the menu.');
+  if (!imageURL) return alert('Select or upload an image');
   createPuzzle(imageURL, c, r);
-  closeMenu();
+  closeModal('menuOverlay');
 });
 
-/* ===== Puzzle creation & logic ===== */
 function createPuzzle(imgSrc, c, r) {
-  cols = c; rows = r;
+  cols = c;
+  rows = r;
   const canvasSize = 500;
   pieceWidth = Math.floor(canvasSize / cols);
   pieceHeight = Math.floor(canvasSize / rows);
@@ -373,6 +1087,7 @@ function createPuzzle(imgSrc, c, r) {
   pieceIdCounter = 0;
   solvedAlready = false;
   selectedPiece = null;
+  hintsUsed = 0;
 
   puzzle.style.gridTemplateColumns = `repeat(${cols}, ${pieceWidth}px)`;
   puzzle.style.gridTemplateRows = `repeat(${rows}, ${pieceHeight}px)`;
@@ -384,8 +1099,8 @@ function createPuzzle(imgSrc, c, r) {
     cell.style.height = pieceHeight + 'px';
     cell.dataset.index = i;
 
-    cell.addEventListener('dragover', e=>{ e.preventDefault(); cell.classList.add('drop-target'); });
-    cell.addEventListener('dragleave', ()=>cell.classList.remove('drop-target'));
+    cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('drop-target'); });
+    cell.addEventListener('dragleave', () => cell.classList.remove('drop-target'));
     cell.addEventListener('drop', onDropOnCell);
 
     const piece = document.createElement('div');
@@ -393,19 +1108,24 @@ function createPuzzle(imgSrc, c, r) {
     piece.draggable = true;
     piece.id = 'piece-' + (pieceIdCounter++);
 
-    const rr = Math.floor(i/cols), cc = i%cols;
+    const rr = Math.floor(i / cols), cc = i % cols;
     piece.style.backgroundImage = `url(${imgSrc})`;
     piece.style.backgroundSize = `${cols * pieceWidth}px ${rows * pieceHeight}px`;
     piece.style.backgroundPosition = `-${cc * pieceWidth}px -${rr * pieceHeight}px`;
     piece.dataset.correct = i;
 
-    piece.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', piece.id); piece.classList.add('dragging'); if (!started) startTimer(); });
-    piece.addEventListener('dragend', ()=>{ piece.classList.remove('dragging'); document.querySelectorAll('.cell.drop-target').forEach(el=>el.classList.remove('drop-target')); });
-
-    piece.addEventListener('click', e=>{ e.stopPropagation(); toggleSelect(piece); });
-
-    piece.addEventListener('touchstart', onTouchStart, {passive:false});
-    piece.addEventListener('touchmove', onTouchMove, {passive:false});
+    piece.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', piece.id);
+      piece.classList.add('dragging');
+      if (!started) startTimer();
+    });
+    piece.addEventListener('dragend', () => {
+      piece.classList.remove('dragging');
+      document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
+    });
+    piece.addEventListener('click', e => { e.stopPropagation(); toggleSelect(piece); });
+    piece.addEventListener('touchstart', onTouchStart, { passive: false });
+    piece.addEventListener('touchmove', onTouchMove, { passive: false });
     piece.addEventListener('touchend', onTouchEnd);
 
     cell.appendChild(piece);
@@ -418,20 +1138,34 @@ function createPuzzle(imgSrc, c, r) {
   resetTimer();
   previewContainer.style.display = 'none';
   previewPuzzle.innerHTML = '';
-  message.textContent = 'The puzzle is complete. Start solving!';
+  
+  if (currentUser) {
+    message.textContent = 'Пазл готов. Начни собирать! 🎮';
+  } else {
+    message.textContent = '🎮 Пазл готов (результаты не будут сохранены)';
+  }
 }
 
-/* Shuffle */
-shuffleBtn.addEventListener('click', ()=>{ shuffle(); solvedAlready=false; hideComplete(); resetTimer(); message.textContent='The puzzle is shuffled'; });
+shuffleBtn.addEventListener('click', () => {
+  shuffle();
+  solvedAlready = false;
+  closeModal('overlayComplete');
+  resetTimer();
+  hintsUsed = 0;
+  message.textContent = 'Пазл перемешан';
+});
+
 function shuffle() {
   if (!cells.length) return;
-  const pieces = cells.map(c=>c.firstChild);
-  for (let i = pieces.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [pieces[i],pieces[j]]=[pieces[j],pieces[i]]; }
-  cells.forEach((cell,i)=>cell.appendChild(pieces[i]));
-  document.querySelectorAll('.piece').forEach(p=>p.style.border='2px solid transparent');
+  const pieces = cells.map(c => c.firstChild);
+  for (let i = pieces.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+  }
+  cells.forEach((cell, i) => cell.appendChild(pieces[i]));
+  document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
 }
 
-/* Drop handler */
 function onDropOnCell(e) {
   e.preventDefault();
   this.classList.remove('drop-target');
@@ -443,18 +1177,19 @@ function onDropOnCell(e) {
   if (sourceCell === this) return;
   sourceCell.appendChild(targetPiece);
   this.appendChild(dragged);
-  dragged.classList.remove('selected','dragging');
-  if (enableCheckEl.checked) checkPositions(); else if (isSolved()) finishPuzzle();
+  dragged.classList.remove('selected', 'dragging');
+  if (enableCheckEl.checked) checkPositions();
+  else if (isSolved()) finishPuzzle();
 }
 
-/* Click selection & exchange */
 function toggleSelect(piece) {
   if (selectedPiece) selectedPiece.classList.remove('selected');
-  if (selectedPiece===piece) { selectedPiece=null; }
+  if (selectedPiece === piece) { selectedPiece = null; }
   else { selectedPiece = piece; piece.classList.add('selected'); }
   if (!started && selectedPiece) startTimer();
 }
-puzzle.addEventListener('click', e=>{
+
+puzzle.addEventListener('click', e => {
   const cell = e.target.closest('.cell');
   if (!cell || !selectedPiece) return;
   const targetPiece = cell.firstChild;
@@ -464,108 +1199,181 @@ puzzle.addEventListener('click', e=>{
   cell.appendChild(selectedPiece);
   selectedPiece.classList.remove('selected');
   selectedPiece = null;
-  if (enableCheckEl.checked) checkPositions(); else if (isSolved()) finishPuzzle();
+  if (enableCheckEl.checked) checkPositions();
+  else if (isSolved()) finishPuzzle();
 });
 
-/* Check positions */
 function checkPositions() {
   if (!cells.length) return;
+  
+  hintsUsed++;
+  
   let solved = true;
-  cells.forEach((cell,i)=>{
+  cells.forEach((cell, i) => {
     const piece = cell.firstChild;
-    if (+piece.dataset.correct === i) piece.style.border='2px solid green';
-    else { piece.style.border='2px solid red'; solved=false; }
+    if (+piece.dataset.correct === i) piece.style.border = '2px solid green';
+    else { piece.style.border = '2px solid red'; solved = false; }
   });
+  
+  const hintMsg = `💡 Подсказка ${hintsUsed}`;
+  message.textContent = hintMsg;
+  
   if (solved) finishPuzzle();
 }
-function isSolved() { return cells.length && cells.every((cell,i)=> +cell.firstChild.dataset.correct === i); }
 
-/* Finish / overlay */
-function finishPuzzle() {
+function isSolved() {
+  return cells.length && cells.every((cell, i) => +cell.firstChild.dataset.correct === i);
+}
+
+async function finishPuzzle() {
   if (solvedAlready) return;
   solvedAlready = true;
+  
+  const elapsedTime = performance.now() - startTime;
   stopTimer();
-  message.textContent = 'The puzzle is complete! 🎉';
-  overlayTime.textContent = `Time: ${formatElapsedTime()}`;
-  showComplete();
+  
+  message.textContent = 'Пазл собран! 🎉';
+  overlayTime.textContent = `⏱️ Время: ${formatTime(elapsedTime)} | 💡 Подсказок: ${hintsUsed}`;
+
+  await savePuzzleResult(imageURL, cols, rows, elapsedTime, hintsUsed);
+
+  openModal('overlayComplete');
 }
-function showComplete() { overlayComplete.style.display='flex'; overlayComplete.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
-function hideComplete() { overlayComplete.style.display='none'; overlayComplete.setAttribute('aria-hidden','true'); document.body.style.overflow=''; }
 
-overlayShuffle.addEventListener('click', ()=>{ hideComplete(); shuffle(); resetTimer(); solvedAlready=false; message.textContent='The puzzle is mixed up'; });
-overlayNew.addEventListener('click', ()=>{ hideComplete(); openMenu(); });
-overlayClose.addEventListener('click', ()=>{ hideComplete(); });
+overlayShuffle.addEventListener('click', () => {
+  closeModal('overlayComplete');
+  shuffle();
+  resetTimer();
+  solvedAlready = false;
+  hintsUsed = 0;
+  message.textContent = 'Пазл перемешан';
+});
 
-/* Timer */
+overlayNew.addEventListener('click', () => {
+  closeModal('overlayComplete');
+  openModal('menuOverlay');
+});
+
+overlayClose.addEventListener('click', () => {
+  closeModal('overlayComplete');
+});
+
 function startTimer() {
   if (started) return;
   started = true;
   startTime = performance.now();
-  timer = setInterval(()=> {
+  timer = setInterval(() => {
     const t = performance.now() - startTime;
-    const ms = Math.floor(t % 1000).toString().padStart(3,'0');
-    const sec = Math.floor(t/1000) % 60;
-    const min = Math.floor(t/60000);
-    timerDisplay.textContent = `Time: ${min}:${sec.toString().padStart(2,'0')}:${ms}`;
+    const ms = Math.floor(t % 1000).toString().padStart(3, '0');
+    const sec = Math.floor(t / 1000) % 60;
+    const min = Math.floor(t / 60000);
+    timerDisplay.textContent = `⏱️ Time: ${min}:${sec.toString().padStart(2, '0')}:${ms}`;
   }, 50);
 }
-function stopTimer(){ clearInterval(timer); }
-function resetTimer(){ clearInterval(timer); started=false; startTime=null; timerDisplay.textContent='Time: 0:00:000'; }
-function formatElapsedTime(){ if (!startTime) return '0:00:000'; const t = performance.now()-startTime; const ms=Math.floor(t%1000).toString().padStart(3,'0'); const sec=Math.floor(t/1000)%60; const min=Math.floor(t/60000); return `${min}:${sec.toString().padStart(2,'0')}:${ms}`; }
 
-/* Preview (assembled look) */
-previewBtn.addEventListener('click', ()=>{
+function stopTimer() { clearInterval(timer); }
+
+function resetTimer() {
+  clearInterval(timer);
+  started = false;
+  startTime = null;
+  timerDisplay.textContent = '⏱️ Time: 0:00:000';
+}
+
+previewBtn.addEventListener('click', () => {
   if (!imageURL) return alert('Choose image from menu');
   if (previewContainer.style.display === 'block') {
-    previewContainer.style.display='none'; previewContainer.setAttribute('aria-hidden','true'); previewBtn.textContent='Show image';
+    previewContainer.style.display = 'none';
+    previewBtn.textContent = 'Show image';
     return;
   }
   const canvasSize = 500;
-  const pW = Math.floor(canvasSize/cols);
-  const pH = Math.floor(canvasSize/rows);
+  const pW = Math.floor(canvasSize / cols);
+  const pH = Math.floor(canvasSize / rows);
   previewPuzzle.innerHTML = '';
   previewPuzzle.style.gridTemplateColumns = `repeat(${cols}, ${pW}px)`;
   previewPuzzle.style.gridTemplateRows = `repeat(${rows}, ${pH}px)`;
-  for (let i=0;i<cols*rows;i++){
-    const r=Math.floor(i/cols), c=i%cols;
-    const pp=document.createElement('div');
-    pp.className='previewPiece';
-    pp.style.width=pW+'px';
-    pp.style.height=pH+'px';
-    pp.style.backgroundImage=`url(${imageURL})`;
-    pp.style.backgroundSize = `${cols*pW}px ${rows*pH}px`;
-    pp.style.backgroundPosition = `-${c*pW}px -${r*pH}px`;
+  for (let i = 0; i < cols * rows; i++) {
+    const r = Math.floor(i / cols), c = i % cols;
+    const pp = document.createElement('div');
+    pp.style.width = pW + 'px';
+    pp.style.height = pH + 'px';
+    pp.style.backgroundImage = `url(${imageURL})`;
+    pp.style.backgroundSize = `${cols * pW}px ${rows * pH}px`;
+    pp.style.backgroundPosition = `-${c * pW}px -${r * pH}px`;
     previewPuzzle.appendChild(pp);
   }
-  previewContainer.style.display='block';
-  previewContainer.setAttribute('aria-hidden','false');
-  previewBtn.textContent='Hide image';
+  previewContainer.style.display = 'block';
+  previewBtn.textContent = 'Hide image';
 });
 
-/* Touch support (mobile drag) */
-let touchDrag = { piece:null, srcCell:null, currentTargetCell:null };
-function onTouchStart(e){ e.preventDefault(); const piece = e.currentTarget; touchDrag.piece = piece; touchDrag.srcCell = piece.parentElement; piece.classList.add('dragging'); if (!started) startTimer(); }
-function onTouchMove(e){ if (!touchDrag.piece) return; e.preventDefault(); const touch = e.changedTouches[0]; const el = document.elementFromPoint(touch.clientX, touch.clientY); const cell = el ? el.closest('.cell') : null; if (cell !== touchDrag.currentTargetCell){ if (touchDrag.currentTargetCell) touchDrag.currentTargetCell.classList.remove('drop-target'); touchDrag.currentTargetCell = cell; if (cell) cell.classList.add('drop-target'); } }
-function onTouchEnd(e){ if (!touchDrag.piece) return; const piece = touchDrag.piece; const targetCell = touchDrag.currentTargetCell; piece.classList.remove('dragging'); if (targetCell && targetCell !== touchDrag.srcCell){ const targetPiece = targetCell.firstChild; const srcCell = touchDrag.srcCell; srcCell.appendChild(targetPiece); targetCell.appendChild(piece); if (enableCheckEl.checked) checkPositions(); else if (isSolved()) finishPuzzle(); } document.querySelectorAll('.cell.drop-target').forEach(el=>el.classList.remove('drop-target')); touchDrag.piece=null; touchDrag.srcCell=null; touchDrag.currentTargetCell=null; }
+let touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
 
-/* ===== Toggleable "Check positions" behavior ===== */
-/* When the checkbox is changed, apply immediate effect:
-   - If enabled: run checkPositions() to show current green/red borders.
-   - If disabled: clear all borders (no visual checking).
-*/
+function onTouchStart(e) {
+  e.preventDefault();
+  const piece = e.currentTarget;
+  touchDrag.piece = piece;
+  touchDrag.srcCell = piece.parentElement;
+  piece.classList.add('dragging');
+  if (!started) startTimer();
+}
+
+function onTouchMove(e) {
+  if (!touchDrag.piece) return;
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const cell = el ? el.closest('.cell') : null;
+  if (cell !== touchDrag.currentTargetCell) {
+    if (touchDrag.currentTargetCell) touchDrag.currentTargetCell.classList.remove('drop-target');
+    touchDrag.currentTargetCell = cell;
+    if (cell) cell.classList.add('drop-target');
+  }
+}
+
+function onTouchEnd(e) {
+  if (!touchDrag.piece) return;
+  const piece = touchDrag.piece;
+  const targetCell = touchDrag.currentTargetCell;
+  piece.classList.remove('dragging');
+  if (targetCell && targetCell !== touchDrag.srcCell) {
+    const targetPiece = targetCell.firstChild;
+    const srcCell = touchDrag.srcCell;
+    srcCell.appendChild(targetPiece);
+    targetCell.appendChild(piece);
+    if (enableCheckEl.checked) checkPositions();
+    else if (isSolved()) finishPuzzle();
+  }
+  document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
+  touchDrag.piece = null;
+  touchDrag.srcCell = null;
+  touchDrag.currentTargetCell = null;
+}
+
 enableCheckEl.addEventListener('change', () => {
   if (enableCheckEl.checked) {
-    // Run check to show current correctness
     checkPositions();
-    message.textContent = 'Position checking is enabled. Correct/incorrect tiles are highlighted.';
+    message.textContent = '✓ Проверка позиций включена';
   } else {
-    // Clear visual markers
     document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
-    message.textContent = 'Position checking is disabled. The puzzle will only be considered solved if it is in the correct order.';
+    message.textContent = '✗ Проверка позиций отключена';
   }
 });
 
-message.textContent = 'Click “Menu” at the top to select an image and size. The “Check positions” option can be turned on or off.';
+// ==================== ��НИЦИАЛИЗАЦИЯ ====================
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Инициализация приложения...');
+  
+  const isAuth = await checkAuth();
+  
+  if (isAuth) {
+    updateUIAfterAuth();
+    console.log('✅ Авторизован:', currentUser.email);
+  } else {
+    updateUIBeforeAuth();
+    console.log('❌ Гость (без регистрации)');
+  }
+});
 </script>
 </body>
 </html>
