@@ -3,35 +3,45 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Online puzzle - Play</title>
+  <title>Online Puzzle - Play</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <!-- ===== HEADER ===== -->
 <header>
-  <h1>🧩 Online puzzle</h1>
+  <h1>🧩 Puzzle Game</h1>
   <div id="topControls">
     <span id="userInfo"></span>
-    <button id="loginLink" class="btn">Sign in</button>
+    <button id="loginLink" class="btn" style="display:none;">Sign in</button>
     <button id="logoutBtn" class="btn" style="display:none;">Sign out</button>
-    <button id="menuToggleBtn" class="btn">Menu</button>
-    <button id="previewBtn" class="btn">Preview</button>
-    <button id="shuffleBtn" class="btn" disabled>Shuffle</button>
   </div>
 </header>
 
 <!-- ===== MAIN CONTENT ===== -->
 <main>
   <div id="puzzleArea">
-    <!-- Controls -->
-    <div id="controls" aria-label="Controls">
-      <input type="file" id="imageUpload" accept="image/*" title="Upload image">
-      <label style="display:flex;align-items:center;gap:6px;">
-        <input type="checkbox" id="enableCheck" checked> Check positions
-      </label>
-      <div style="margin-left:auto;color:#666;font-size:0.95rem;">
-        Drag or click on tiles to rearrange them
+    <!-- Game Info -->
+    <div id="gameHeader">
+      <div id="gameStats">
+        <div class="stat">
+          <span class="stat-label">⏱️ Time</span>
+          <span id="timer" class="stat-value">0:00:000</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">💡 Hints</span>
+          <span id="hintsCount" class="stat-value">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">🎮 Size</span>
+          <span id="gridSize" class="stat-value">5×6</span>
+        </div>
+      </div>
+      <div id="gameControls">
+        <button id="newPuzzleBtn" class="btn btn-icon" title="New puzzle">➕ New</button>
+        <button id="previewBtn" class="btn btn-icon" title="Preview image">👁️ Preview</button>
+        <button id="checkBtn" class="btn btn-icon" title="Check positions">✓ Check</button>
+        <button id="shuffleBtn" class="btn btn-icon" title="Shuffle" disabled>🔀 Shuffle</button>
       </div>
     </div>
 
@@ -40,73 +50,126 @@
 
     <!-- Preview -->
     <div id="previewContainer" aria-hidden="true">
-      <h3 style="margin:8px 0 6px;">Preview:</h3>
       <div id="previewPuzzle"></div>
     </div>
 
-    <!-- Game Info -->
+    <!-- Message -->
     <div id="message" aria-live="polite">
-      Click "Menu" at the top to select an image and size.
+      Click "New" button to create a puzzle!
     </div>
-    <h3 id="timer">Time: 0:00:000</h3>
-    <span id="hintsCount" style="color:#666;"></span>
   </div>
 </main>
 
-<!-- ===== COMPLETION MODAL ===== -->
-<div id="overlayComplete" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modal" role="document">
-    <h2>🎉 The puzzle is complete!</h2>
-    <p id="overlayTime">Time: 0:00:000</p>
-    <p id="overlayHints">Hints used: 0</p>
-    <p id="overlayImageName" style="font-size:0.9rem;color:#888;"></p>
-    <div id="saveSection" style="display:none;margin:16px 0;padding:12px;background:#f5f5f5;border-radius:6px;">
-      <p style="margin:0 0 8px;font-size:0.9rem;color:#666;">Save your result?</p>
-      <button id="overlaySave" class="btn primary" style="width:100%;">Save result</button>
+<!-- ===== INITIAL SETUP MODAL ===== -->
+<div id="setupOverlay" class="overlay active">
+  <div class="modal modal-large">
+    <div class="modal-header">
+      <h2>🎮 Create Your Puzzle</h2>
+      <p class="modal-subtitle">Choose an image and size to start</p>
     </div>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
-      <button id="overlayShuffle" class="btn">Shuffle</button>
-      <button id="overlayNew" class="btn primary">Create new puzzle</button>
-      <button id="overlayClose" class="btn">Close</button>
+
+    <div class="modal-content">
+      <div class="setup-grid">
+        <!-- Images Section -->
+        <div class="setup-section">
+          <h3>📸 Select Image</h3>
+          <div id="presetList" class="preset-list"></div>
+          <div class="upload-section">
+            <label for="menuUpload" class="upload-label">
+              📁 Upload Your Image
+            </label>
+            <input type="file" id="menuUpload" accept="image/*" style="display:none;">
+          </div>
+        </div>
+
+        <!-- Size Section -->
+        <div class="setup-section">
+          <h3>📏 Select Size</h3>
+          <div class="preset-sizes" id="presetSizes">
+            <button data-cols="3" data-rows="3" class="size-btn">
+              <span class="size-text">3×3</span>
+              <span class="size-hint">Easy</span>
+            </button>
+            <button data-cols="5" data-rows="6" class="size-btn active">
+              <span class="size-text">5×6</span>
+              <span class="size-hint">Medium</span>
+            </button>
+            <button data-cols="8" data-rows="6" class="size-btn">
+              <span class="size-text">8×6</span>
+              <span class="size-hint">Hard</span>
+            </button>
+            <button data-cols="10" data-rows="8" class="size-btn">
+              <span class="size-text">10×8</span>
+              <span class="size-hint">Expert</span>
+            </button>
+          </div>
+
+          <div class="custom-size">
+            <label>Custom Size:</label>
+            <div class="custom-inputs">
+              <input type="number" id="menuCols" min="1" max="20" value="5">
+              <span>×</span>
+              <input type="number" id="menuRows" min="1" max="20" value="6">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="setupCreate" class="btn btn-primary btn-large">🚀 Start Puzzle</button>
     </div>
   </div>
 </div>
 
-<!-- ===== MENU MODAL ===== -->
-<div id="menuOverlay" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="menu" role="document" aria-label="Image and size selection menu">
-    <div id="menuSidebar">
-      <h3 style="margin:0 0 8px 0;">Choose image</h3>
-      <div id="presetList"></div>
-      <div style="margin-top:10px;">
-        <label style="font-size:0.9rem;">Upload yours</label>
-        <input type="file" id="menuUpload" accept="image/*" style="width:100%;margin-top:6px;">
+<!-- ===== COMPLETION MODAL ===== -->
+<div id="completionOverlay" class="overlay">
+  <div class="modal modal-completion">
+    <div class="completion-celebration">
+      <div class="completion-emoji">🎉</div>
+    </div>
+
+    <div class="modal-content">
+      <h2 class="completion-title">Puzzle Complete!</h2>
+      
+      <div class="result-stats">
+        <div class="result-stat">
+          <span class="result-label">⏱️ Time</span>
+          <span id="resultTime" class="result-value">0:00:000</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-label">💡 Hints</span>
+          <span id="resultHints" class="result-value">0</span>
+        </div>
+        <div class="result-stat">
+          <span class="result-label">🎮 Difficulty</span>
+          <span id="resultDifficulty" class="result-value">Medium</span>
+        </div>
+      </div>
+
+      <p id="resultImageName" class="result-image">Image: Custom</p>
+
+      <div id="authPrompt" class="auth-prompt" style="display:none;">
+        <p>📌 Sign up to save your results and track progress!</p>
+        <button id="resultSignup" class="btn btn-secondary">Create Account</button>
+      </div>
+
+      <div id="saveSection" style="display:none;">
+        <button id="resultSave" class="btn btn-success">💾 Save Result</button>
       </div>
     </div>
 
-    <div id="menuRight">
-      <h3 style="margin:0;">Choose size</h3>
-      <div class="presetSizes" id="presetSizes">
-        <button data-cols="3" data-rows="3">3 × 3</button>
-        <button data-cols="5" data-rows="6" class="active">5 × 6</button>
-        <button data-cols="8" data-rows="6">8 × 6</button>
-        <button data-cols="10" data-rows="8">10 × 8</button>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:center;">
-        <label>Custom:
-          <input type="number" id="menuCols" min="1" max="30" value="5" style="width:70px;margin-left:6px">
-          ×
-          <input type="number" id="menuRows" min="1" max="30" value="6" style="width:70px;margin-left:6px">
-        </label>
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:auto;">
-        <button id="menuCreate" class="btn primary">Create puzzle</button>
-        <button id="menuUseUploaded" class="btn">Use uploaded</button>
-        <button id="menuClose" class="btn">Close</button>
-      </div>
+    <div class="modal-footer">
+      <button id="resultNew" class="btn btn-primary btn-large">➕ New Puzzle</button>
+      <button id="resultClose" class="btn btn-secondary">✕ Close</button>
     </div>
+  </div>
+</div>
+
+<!-- ===== PREVIEW MODAL ===== -->
+<div id="previewOverlay" class="overlay overlay-transparent">
+  <div class="preview-content">
+    <div id="fullPreviewPuzzle"></div>
   </div>
 </div>
 
