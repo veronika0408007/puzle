@@ -1,83 +1,71 @@
-/* ===== PUZZLE MODULE ===== */
-const puzzleModule = {
-  /* Configuration */
+/* ===== PUZZLE GAME MODULE ===== */
+const game = {
+  // Configuration
   presets: [
-    { 
-      id: 'p1', 
-      title: 'Mountain', 
-      url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' 
-    },
-    { 
-      id: 'p2', 
-      title: 'City', 
-      url: 'https://www.latvia.travel/sites/default/files/styles/mobile_promo/public/media_image/37315458162_8e53834697_k.jpg?itok=E_xOti-8' 
-    },
-    { 
-      id: 'p3', 
-      title: 'Animals', 
-      url: 'https://ae01.alicdn.com/kf/Sed9c41c14c834c4883a0faefbc53c9b5C.jpg' 
-    },
-    { 
-      id: 'p4', 
-      title: 'Friends', 
-      url: 'https://static01.nyt.com/images/2020/02/21/multimedia/21xp-friends/21xp-friends-articleLarge.jpg' 
-    }
+    { id: 'p1', title: 'Mountain', url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' },
+    { id: 'p2', title: 'City', url: 'https://www.latvia.travel/sites/default/files/styles/mobile_promo/public/media_image/37315458162_8e53834697_k.jpg?itok=E_xOti-8' },
+    { id: 'p3', title: 'Forest', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200&auto=format&fit=crop' },
+    { id: 'p4', title: 'Ocean', url: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=1200&auto=format&fit=crop' }
   ],
 
-  /* State */
-  selectedPreset: null,
-  uploadedURL: '',
-  imageURL: '',
-  currentImageName: 'custom',
-  cols: 5,
-  rows: 6,
-  pieceWidth: 100,
-  pieceHeight: 100,
-  cells: [],
-  started: false,
-  startTime: null,
-  timer: null,
-  pieceIdCounter: 0,
-  solvedAlready: false,
-  selectedPiece: null,
-  hintsUsed: 0,
-  isLoggedIn: false,
-  touchDrag: { piece: null, srcCell: null, currentTargetCell: null },
+  // State
+  state: {
+    selectedPreset: null,
+    uploadedURL: '',
+    imageURL: '',
+    currentImageName: 'Custom',
+    cols: 5,
+    rows: 6,
+    pieceWidth: 100,
+    pieceHeight: 100,
+    cells: [],
+    started: false,
+    startTime: null,
+    timer: null,
+    solvedAlready: false,
+    selectedPiece: null,
+    hintsUsed: 0,
+    isLoggedIn: false,
+    touchDrag: { piece: null, srcCell: null, currentTargetCell: null }
+  },
 
-  /* DOM Elements */
+  // DOM Elements
   elements: {
-    menuToggleBtn: document.getElementById('menuToggleBtn'),
-    menuOverlay: document.getElementById('menuOverlay'),
-    menuClose: document.getElementById('menuClose'),
+    setupOverlay: document.getElementById('setupOverlay'),
+    setupCreate: document.getElementById('setupCreate'),
     presetList: document.getElementById('presetList'),
     menuUpload: document.getElementById('menuUpload'),
+    presetSizes: document.getElementById('presetSizes'),
     menuCols: document.getElementById('menuCols'),
     menuRows: document.getElementById('menuRows'),
-    menuCreate: document.getElementById('menuCreate'),
-    menuUseUploaded: document.getElementById('menuUseUploaded'),
-    presetSizes: document.getElementById('presetSizes'),
     
-    imageUpload: document.getElementById('imageUpload'),
     puzzle: document.getElementById('puzzle'),
+    newPuzzleBtn: document.getElementById('newPuzzleBtn'),
     previewBtn: document.getElementById('previewBtn'),
+    checkBtn: document.getElementById('checkBtn'),
     shuffleBtn: document.getElementById('shuffleBtn'),
-    enableCheckEl: document.getElementById('enableCheck'),
     
     previewContainer: document.getElementById('previewContainer'),
     previewPuzzle: document.getElementById('previewPuzzle'),
+    fullPreviewPuzzle: document.getElementById('fullPreviewPuzzle'),
+    previewOverlay: document.getElementById('previewOverlay'),
     
+    gameHeader: document.getElementById('gameHeader'),
     message: document.getElementById('message'),
-    timerDisplay: document.getElementById('timer'),
-    hintsCountDisplay: document.getElementById('hintsCount'),
+    timer: document.getElementById('timer'),
+    hintsCount: document.getElementById('hintsCount'),
+    gridSize: document.getElementById('gridSize'),
     
-    overlayComplete: document.getElementById('overlayComplete'),
-    overlayTime: document.getElementById('overlayTime'),
-    overlayHints: document.getElementById('overlayHints'),
-    overlayImageName: document.getElementById('overlayImageName'),
-    overlayShuffle: document.getElementById('overlayShuffle'),
-    overlaySave: document.getElementById('overlaySave'),
-    overlayNew: document.getElementById('overlayNew'),
-    overlayClose: document.getElementById('overlayClose'),
+    completionOverlay: document.getElementById('completionOverlay'),
+    resultTime: document.getElementById('resultTime'),
+    resultHints: document.getElementById('resultHints'),
+    resultDifficulty: document.getElementById('resultDifficulty'),
+    resultImageName: document.getElementById('resultImageName'),
+    authPrompt: document.getElementById('authPrompt'),
+    resultSignup: document.getElementById('resultSignup'),
+    resultSave: document.getElementById('resultSave'),
+    resultNew: document.getElementById('resultNew'),
+    resultClose: document.getElementById('resultClose'),
     saveSection: document.getElementById('saveSection'),
     
     loginLink: document.getElementById('loginLink'),
@@ -85,44 +73,55 @@ const puzzleModule = {
     userInfo: document.getElementById('userInfo'),
   },
 
-  /* Initialize */
+  // Initialize
   init() {
-    this.selectedPreset = this.presets[0];
-    this.imageURL = this.selectedPreset.url;
-    this.currentImageName = this.selectedPreset.title;
+    this.state.selectedPreset = this.presets[0];
+    this.state.imageURL = this.state.selectedPreset.url;
+    this.state.currentImageName = this.state.selectedPreset.title;
     
     this.buildPresets();
     this.attachEventListeners();
     this.checkAuthStatus();
+    
+    console.log('🎮 Puzzle game initialized');
   },
 
-  /* Check Auth Status */
+  // Auth
   checkAuthStatus() {
     const token = sessionStorage.getItem('userToken');
     const userData = sessionStorage.getItem('userData');
     
     if (token && userData) {
-      this.isLoggedIn = true;
+      this.state.isLoggedIn = true;
       const user = JSON.parse(userData);
       this.updateUserUI(user);
+      this.elements.authPrompt.style.display = 'none';
       this.elements.saveSection.style.display = 'block';
     } else {
-      this.isLoggedIn = false;
+      this.state.isLoggedIn = false;
       this.elements.userInfo.textContent = '';
       this.elements.loginLink.style.display = 'inline-block';
       this.elements.logoutBtn.style.display = 'none';
+      this.elements.authPrompt.style.display = 'block';
       this.elements.saveSection.style.display = 'none';
     }
   },
 
-  /* Update User UI */
   updateUserUI(user) {
-    this.elements.userInfo.textContent = `Welcome, ${user.fullName}`;
+    this.elements.userInfo.textContent = `👤 ${user.fullName}`;
     this.elements.loginLink.style.display = 'none';
     this.elements.logoutBtn.style.display = 'inline-block';
   },
 
-  /* Build Preset Thumbnails */
+  logout() {
+    sessionStorage.removeItem('userToken');
+    sessionStorage.removeItem('userData');
+    this.state.isLoggedIn = false;
+    this.checkAuthStatus();
+    this.updateMessage('👋 Signed out');
+  },
+
+  // Build Presets
   buildPresets() {
     this.presets.forEach(p => {
       const el = document.createElement('div');
@@ -130,7 +129,7 @@ const puzzleModule = {
       el.dataset.id = p.id;
       el.innerHTML = `
         <img src="${p.url}" alt="${p.title}">
-        <div>${p.title}</div>
+        <div class="presetItem-name">${p.title}</div>
       `;
       el.addEventListener('click', () => this.selectPreset(p, el));
       this.elements.presetList.appendChild(el);
@@ -141,119 +140,71 @@ const puzzleModule = {
     }
   },
 
-  /* Select Preset */
   selectPreset(preset, element) {
     document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
-    this.selectedPreset = preset;
-    this.imageURL = preset.url;
-    this.currentImageName = preset.title;
+    this.state.selectedPreset = preset;
+    this.state.imageURL = preset.url;
+    this.state.currentImageName = preset.title;
   },
 
-  /* Attach Event Listeners */
+  // Event Listeners
   attachEventListeners() {
-    /* Menu */
-    this.elements.menuToggleBtn.addEventListener('click', () => this.toggleMenu());
-    this.elements.menuClose.addEventListener('click', () => this.closeMenu());
-    this.elements.menuOverlay.addEventListener('click', (e) => {
-      if (e.target === this.elements.menuOverlay) this.closeMenu();
-    });
+    // Setup
+    this.elements.setupCreate.addEventListener('click', () => this.createFromSetup());
     
-    /* Auth */
-    this.elements.loginLink.addEventListener('click', () => this.redirectToAuth());
-    this.elements.logoutBtn.addEventListener('click', () => this.logout());
-    
-    /* Image Upload */
-    this.elements.imageUpload.addEventListener('change', (e) => this.handleQuickUpload(e));
-    this.elements.menuUpload.addEventListener('change', (e) => this.handleMenuUpload(e));
-    
-    /* Menu Controls */
+    // Presets
     this.elements.presetSizes.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => this.selectSize(btn));
     });
     
-    this.elements.menuCreate.addEventListener('click', () => this.createPuzzleFromMenu());
-    this.elements.menuUseUploaded.addEventListener('click', () => this.useUploadedImage());
+    // Upload
+    this.elements.menuUpload.addEventListener('change', (e) => this.handleMenuUpload(e));
     
-    /* Puzzle Controls */
+    // Game Controls
+    this.elements.newPuzzleBtn.addEventListener('click', () => this.openSetup());
     this.elements.previewBtn.addEventListener('click', () => this.togglePreview());
+    this.elements.checkBtn.addEventListener('click', () => this.checkPositionsManual());
     this.elements.shuffleBtn.addEventListener('click', () => this.handleShuffle());
-    this.elements.enableCheckEl.addEventListener('change', () => this.handleCheckToggle());
     
-    /* Completion Overlay */
-    this.elements.overlayShuffle.addEventListener('click', () => this.handleShuffle());
-    this.elements.overlayNew.addEventListener('click', () => this.openMenu());
-    this.elements.overlayClose.addEventListener('click', () => this.hideComplete());
-    this.elements.overlaySave.addEventListener('click', () => this.savePuzzleResult());
+    // Auth
+    this.elements.loginLink.addEventListener('click', () => window.location.href = '../auth/index.html');
+    this.elements.logoutBtn.addEventListener('click', () => this.logout());
     
-    /* Keyboard */
+    // Completion
+    this.elements.resultNew.addEventListener('click', () => this.closeCompletion());
+    this.elements.resultClose.addEventListener('click', () => this.closeCompletion());
+    this.elements.resultSignup.addEventListener('click', () => window.location.href = '../auth/index.html');
+    this.elements.resultSave.addEventListener('click', () => this.savePuzzleResult());
+    
+    // Preview
+    this.elements.previewOverlay.addEventListener('click', () => this.closePreview());
+    
+    // Completion overlay - click outside to close
+    this.elements.completionOverlay.addEventListener('click', (e) => {
+      if (e.target === this.elements.completionOverlay) {
+        this.closeCompletion();
+      }
+    });
+
+    // Keyboard
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        if (this.elements.menuOverlay.classList.contains('active')) this.closeMenu();
-        if (this.elements.overlayComplete.classList.contains('active')) this.hideComplete();
+        this.closePreview();
+        this.closeCompletion();
       }
     });
   },
 
-  /* Auth Functions */
-  redirectToAuth() {
-    window.location.href = '../auth/index.html';
+  // Setup
+  openSetup() {
+    this.elements.setupOverlay.classList.add('active');
   },
 
-  logout() {
-    sessionStorage.removeItem('userToken');
-    sessionStorage.removeItem('userData');
-    this.isLoggedIn = false;
-    this.checkAuthStatus();
-    this.updateMessage('You have been signed out');
+  closeSetup() {
+    this.elements.setupOverlay.classList.remove('active');
   },
 
-  /* Menu Functions */
-  toggleMenu() {
-    if (this.elements.menuOverlay.classList.contains('active')) {
-      this.closeMenu();
-    } else {
-      this.openMenu();
-    }
-  },
-
-  openMenu() {
-    this.elements.menuOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  },
-
-  closeMenu() {
-    this.elements.menuOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-  },
-
-  /* Upload Handlers */
-  handleQuickUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (this.uploadedURL) URL.revokeObjectURL(this.uploadedURL);
-    this.uploadedURL = URL.createObjectURL(file);
-    this.imageURL = this.uploadedURL;
-    this.currentImageName = file.name;
-    
-    this.updateMessage('📁 A custom image has been uploaded. Open the menu and click "Create Puzzle."');
-  },
-
-  handleMenuUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (this.uploadedURL) URL.revokeObjectURL(this.uploadedURL);
-    this.uploadedURL = URL.createObjectURL(file);
-    this.imageURL = this.uploadedURL;
-    this.currentImageName = file.name;
-    
-    document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
-    this.selectedPreset = null;
-  },
-
-  /* Size Selection */
   selectSize(button) {
     this.elements.presetSizes.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     button.classList.add('active');
@@ -261,58 +212,57 @@ const puzzleModule = {
     this.elements.menuRows.value = button.dataset.rows;
   },
 
-  /* Create Puzzle */
-  createPuzzleFromMenu() {
-    const cols = Math.max(1, Math.min(30, +this.elements.menuCols.value || 1));
-    const rows = Math.max(1, Math.min(30, +this.elements.menuRows.value || 1));
+  handleMenuUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
     
-    if (!this.imageURL) {
-      alert('Select or upload an image from the menu.');
-      return;
-    }
+    if (this.state.uploadedURL) URL.revokeObjectURL(this.state.uploadedURL);
+    this.state.uploadedURL = URL.createObjectURL(file);
+    this.state.imageURL = this.state.uploadedURL;
+    this.state.currentImageName = file.name;
     
-    this.createPuzzle(this.imageURL, cols, rows);
-    this.closeMenu();
-  },
-
-  useUploadedImage() {
-    if (!this.uploadedURL) {
-      alert('First, upload your image to the menu (file).');
-      return;
-    }
-    
-    this.imageURL = this.uploadedURL;
-    this.selectedPreset = null;
     document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
-    this.updateMessage('✓ The uploaded image is used. Click "Create Puzzle."');
   },
 
-  /* Main Puzzle Creation */
-  createPuzzle(imgSrc, cols, rows) {
-    this.cols = cols;
-    this.rows = rows;
+  createFromSetup() {
+    const cols = Math.max(1, Math.min(20, +this.elements.menuCols.value || 5));
+    const rows = Math.max(1, Math.min(20, +this.elements.menuRows.value || 6));
     
-    const canvasSize = 500;
-    this.pieceWidth = Math.floor(canvasSize / cols);
-    this.pieceHeight = Math.floor(canvasSize / rows);
+    if (!this.state.imageURL) {
+      alert('Please select or upload an image');
+      return;
+    }
+    
+    this.createPuzzle(this.state.imageURL, cols, rows);
+    this.closeSetup();
+  },
 
-    /* Reset state */
+  // Create Puzzle
+  createPuzzle(imgSrc, cols, rows) {
+    this.state.cols = cols;
+    this.state.rows = rows;
+    
+    const canvasSize = Math.min(600, window.innerWidth - 40);
+    this.state.pieceWidth = Math.floor(canvasSize / cols);
+    this.state.pieceHeight = Math.floor(canvasSize / rows);
+
+    // Reset
     this.elements.puzzle.innerHTML = '';
-    this.cells = [];
-    this.pieceIdCounter = 0;
-    this.solvedAlready = false;
-    this.selectedPiece = null;
-    this.hintsUsed = 0;
+    this.state.cells = [];
+    this.state.solvedAlready = false;
+    this.state.selectedPiece = null;
+    this.state.hintsUsed = 0;
     this.updateHintsDisplay();
+    this.updateGridSize();
 
-    /* Setup grid */
-    this.elements.puzzle.style.gridTemplateColumns = `repeat(${cols}, ${this.pieceWidth}px)`;
-    this.elements.puzzle.style.gridTemplateRows = `repeat(${rows}, ${this.pieceHeight}px)`;
+    // Setup grid
+    this.elements.puzzle.style.gridTemplateColumns = `repeat(${cols}, ${this.state.pieceWidth}px)`;
+    this.elements.puzzle.style.gridTemplateRows = `repeat(${rows}, ${this.state.pieceHeight}px)`;
 
-    /* Create cells and pieces */
+    // Create pieces
     for (let i = 0; i < cols * rows; i++) {
       const cell = this.createCell(i, imgSrc);
-      this.cells.push(cell);
+      this.state.cells.push(cell);
       this.elements.puzzle.appendChild(cell);
     }
 
@@ -321,15 +271,14 @@ const puzzleModule = {
     this.resetTimer();
     this.elements.previewContainer.style.display = 'none';
     this.elements.previewPuzzle.innerHTML = '';
-    this.updateMessage('🎮 The puzzle is complete. Start solving!');
+    this.updateMessage('🎮 Drag pieces to solve the puzzle!');
   },
 
-  /* Create Single Cell */
   createCell(index, imgSrc) {
     const cell = document.createElement('div');
     cell.className = 'cell';
-    cell.style.width = this.pieceWidth + 'px';
-    cell.style.height = this.pieceHeight + 'px';
+    cell.style.width = this.state.pieceWidth + 'px';
+    cell.style.height = this.state.pieceHeight + 'px';
     cell.dataset.index = index;
 
     cell.addEventListener('dragover', (e) => {
@@ -339,39 +288,34 @@ const puzzleModule = {
     cell.addEventListener('dragleave', () => cell.classList.remove('drop-target'));
     cell.addEventListener('drop', (e) => this.onDropOnCell(e, cell));
 
-    /* Create piece */
     const piece = document.createElement('div');
     piece.className = 'piece';
     piece.draggable = true;
-    piece.id = 'piece-' + (this.pieceIdCounter++);
+    piece.id = 'piece-' + index;
 
-    const row = Math.floor(index / this.cols);
-    const col = index % this.cols;
+    const row = Math.floor(index / this.state.cols);
+    const col = index % this.state.cols;
     
     piece.style.backgroundImage = `url(${imgSrc})`;
-    piece.style.backgroundSize = `${this.cols * this.pieceWidth}px ${this.rows * this.pieceHeight}px`;
-    piece.style.backgroundPosition = `-${col * this.pieceWidth}px -${row * this.pieceHeight}px`;
+    piece.style.backgroundSize = `${this.state.cols * this.state.pieceWidth}px ${this.state.rows * this.state.pieceHeight}px`;
+    piece.style.backgroundPosition = `-${col * this.state.pieceWidth}px -${row * this.state.pieceHeight}px`;
     piece.dataset.correct = index;
 
-    /* Drag events */
     piece.addEventListener('dragstart', (e) => {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', piece.id);
       piece.classList.add('dragging');
-      if (!this.started) this.startTimer();
+      if (!this.state.started) this.startTimer();
     });
     piece.addEventListener('dragend', () => {
       piece.classList.remove('dragging');
       document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
     });
-
-    /* Click event */
     piece.addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleSelect(piece);
     });
 
-    /* Touch events */
     piece.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
     piece.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
     piece.addEventListener('touchend', (e) => this.onTouchEnd(e));
@@ -380,7 +324,6 @@ const puzzleModule = {
     return cell;
   },
 
-  /* Drop Handler */
   onDropOnCell(e, cell) {
     e.preventDefault();
     cell.classList.remove('drop-target');
@@ -397,213 +340,138 @@ const puzzleModule = {
     cell.appendChild(dragged);
     dragged.classList.remove('selected', 'dragging');
 
-    /* Check after move */
     this.checkPuzzleCompletion();
   },
 
-  /* Click Selection */
   toggleSelect(piece) {
-    if (this.selectedPiece) {
-      this.selectedPiece.classList.remove('selected');
+    if (this.state.selectedPiece) {
+      this.state.selectedPiece.classList.remove('selected');
     }
     
-    if (this.selectedPiece === piece) {
-      this.selectedPiece = null;
+    if (this.state.selectedPiece === piece) {
+      this.state.selectedPiece = null;
     } else {
-      this.selectedPiece = piece;
+      this.state.selectedPiece = piece;
       piece.classList.add('selected');
     }
     
-    if (!this.started && this.selectedPiece) {
+    if (!this.state.started && this.state.selectedPiece) {
       this.startTimer();
     }
   },
 
-  /* Check if Solved - RETURNS TRUE ONLY IF ALL CORRECT */
+  checkPuzzleCompletion() {
+    if (this.state.solvedAlready) return;
+
+    if (this.isSolved()) {
+      this.finishPuzzle();
+    }
+  },
+
   isSolved() {
-    if (!this.cells.length) return false;
+    if (!this.state.cells.length) return false;
     
-    return this.cells.every((cell, index) => {
+    return this.state.cells.every((cell, index) => {
       const piece = cell.firstChild;
       return +piece.dataset.correct === index;
     });
   },
 
-  /* Check Positions With Visual Feedback */
-  checkPositions() {
-    if (!this.cells.length) return;
+  checkPositionsManual() {
+    if (!this.state.cells.length) return;
 
-    let allCorrect = true;
-    this.cells.forEach((cell, index) => {
+    this.state.hintsUsed++;
+    this.updateHintsDisplay();
+
+    let solved = true;
+    this.state.cells.forEach((cell, index) => {
       const piece = cell.firstChild;
       if (+piece.dataset.correct === index) {
         piece.style.border = '2px solid var(--success)';
       } else {
         piece.style.border = '2px solid var(--error)';
-        allCorrect = false;
+        solved = false;
       }
     });
 
-    /* If all correct, finish puzzle */
-    if (allCorrect) {
+    if (solved) {
       setTimeout(() => this.finishPuzzle(), 500);
     }
   },
 
-  /* Main Check Function After Every Move */
-  checkPuzzleCompletion() {
-    if (this.solvedAlready) return;
-
-    if (this.elements.enableCheckEl.checked) {
-      /* Visual check mode - show green/red borders */
-      this.hintsUsed++;
-      this.updateHintsDisplay();
-      this.checkPositions();
-      this.updateMessage('🔍 Checking positions...');
-    } else {
-      /* Silent mode - only notify when fully solved */
-      if (this.isSolved()) {
-        this.finishPuzzle();
-      }
-    }
-  },
-
-  /* Handle Check Toggle */
-  handleCheckToggle() {
-    if (this.elements.enableCheckEl.checked) {
-      this.hintsUsed++;
-      this.updateHintsDisplay();
-      this.checkPositions();
-      this.updateMessage('✓ Position checking enabled. Correct tiles = green, Incorrect = red.');
-    } else {
-      document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
-      this.updateMessage('✗ Position checking disabled. You will see result when puzzle is complete.');
-    }
-  },
-
-  /* Update Hints Display */
-  updateHintsDisplay() {
-    this.elements.hintsCountDisplay.textContent = `💡 Hints used: ${this.hintsUsed}`;
-  },
-
-  /* Shuffle */
+  // Shuffle
   handleShuffle() {
-    this.hideComplete();
     this.shuffle();
     this.resetTimer();
-    this.solvedAlready = false;
-    this.hintsUsed = 0;
+    this.state.solvedAlready = false;
+    this.state.hintsUsed = 0;
     this.updateHintsDisplay();
-    this.updateMessage('🔀 The puzzle is shuffled');
+    this.updateMessage('🔀 Puzzle shuffled!');
   },
 
   shuffle() {
-    if (!this.cells.length) return;
+    if (!this.state.cells.length) return;
 
-    const pieces = this.cells.map(cell => cell.firstChild);
+    const pieces = this.state.cells.map(cell => cell.firstChild);
     
-    /* Fisher-Yates shuffle */
     for (let i = pieces.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
     }
 
-    this.cells.forEach((cell, index) => cell.appendChild(pieces[index]));
+    this.state.cells.forEach((cell, index) => cell.appendChild(pieces[index]));
     document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
   },
 
-  /* Finish Puzzle - CALLED ONLY WHEN FULLY SOLVED */
+  // Completion
   finishPuzzle() {
-    if (this.solvedAlready) return;
+    if (this.state.solvedAlready) return;
 
-    this.solvedAlready = true;
+    this.state.solvedAlready = true;
     this.stopTimer();
     
-    /* Update overlay with final data */
-    this.elements.overlayTime.textContent = `⏱️ Time: ${this.formatElapsedTime()}`;
-    this.elements.overlayHints.textContent = `💡 Hints used: ${this.hintsUsed}`;
-    this.elements.overlayImageName.textContent = `📸 Image: ${this.currentImageName}`;
-    
-    /* Show confetti or animation effect */
     this.playCompletionAnimation();
+    this.showCompletion();
+  },
+
+  showCompletion() {
+    this.elements.resultTime.textContent = this.formatElapsedTime();
+    this.elements.resultHints.textContent = this.state.hintsUsed;
+    this.elements.resultDifficulty.textContent = this.getDifficulty();
+    this.elements.resultImageName.textContent = `📸 ${this.state.currentImageName}`;
     
-    this.showComplete();
+    this.elements.completionOverlay.classList.add('active');
   },
 
-  /* Play Completion Animation */
-  playCompletionAnimation() {
-    /* Add visual celebration effect */
-    const celebrationMessage = document.createElement('div');
-    celebrationMessage.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 4rem;
-      font-weight: bold;
-      z-index: 2001;
-      animation: bounce 0.6s ease-in-out;
-      pointer-events: none;
-    `;
-    celebrationMessage.textContent = '🎉';
-    document.body.appendChild(celebrationMessage);
-    
-    setTimeout(() => celebrationMessage.remove(), 600);
-    
-    /* Play sound if possible */
-    this.playCompletionSound();
+  closeCompletion() {
+    this.elements.completionOverlay.classList.remove('active');
+    this.openSetup();
   },
 
-  /* Play Completion Sound */
-  playCompletionSound() {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = 800;
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (e) {
-      /* Audio API not available */
-    }
+  getDifficulty() {
+    const total = this.state.cols * this.state.rows;
+    if (total <= 9) return '🟢 Easy';
+    if (total <= 30) return '🟡 Medium';
+    if (total <= 48) return '🔴 Hard';
+    return '⚫ Expert';
   },
 
-  /* Show/Hide Complete */
-  showComplete() {
-    this.elements.overlayComplete.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  },
-
-  hideComplete() {
-    this.elements.overlayComplete.classList.remove('active');
-    document.body.style.overflow = '';
-  },
-
-  /* Save Result */
   savePuzzleResult() {
-    if (!this.isLoggedIn) {
-      alert('Please sign in to save your result');
+    if (!this.state.isLoggedIn) {
+      alert('Please sign in to save results');
       return;
     }
 
     const userData = JSON.parse(sessionStorage.getItem('userData'));
     const result = {
-      imageName: this.currentImageName,
-      gridSize: `${this.cols}x${this.rows}`,
+      imageName: this.state.currentImageName,
+      gridSize: `${this.state.cols}x${this.state.rows}`,
       timeElapsed: this.formatElapsedTime(),
-      hintsUsed: this.hintsUsed,
+      hintsUsed: this.state.hintsUsed,
       userId: userData.id,
       date: new Date().toISOString()
     };
 
-    /* Send to auth backend */
     fetch('../auth/save-result.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -612,195 +480,217 @@ const puzzleModule = {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        this.updateMessage(`✅ Puzzle result saved!`);
-      } else {
-        alert('Error saving result');
+        this.updateMessage('✅ Result saved!');
+        setTimeout(() => this.closeCompletion(), 1500);
       }
-      this.hideComplete();
     })
-    .catch(err => {
-      console.error('Save error:', err);
-      alert('Error saving result');
-      this.hideComplete();
-    });
+    .catch(err => console.error('Save error:', err));
   },
 
-  /* Preview */
+  playCompletionAnimation() {
+    const celebMsg = document.createElement('div');
+    celebMsg.className = 'celebration-emoji';
+    celebMsg.textContent = '🎉';
+    celebMsg.style.left = '50%';
+    celebMsg.style.top = '50%';
+    document.body.appendChild(celebMsg);
+    
+    setTimeout(() => celebMsg.remove(), 800);
+    
+    this.createConfetti();
+    this.playSound();
+  },
+
+  createConfetti() {
+    const emojis = ['🎉', '🎊', '⭐', '✨', '🌟'];
+    for (let i = 0; i < 15; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'celebration-emoji';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        
+        const x = Math.random() * window.innerWidth;
+        const tx = (Math.random() - 0.5) * 200;
+        
+        el.style.left = x + 'px';
+        el.style.top = '-50px';
+        el.style.setProperty('--tx', tx + 'px');
+        
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+      }, i * 30);
+    }
+  },
+
+  playSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [
+        { freq: 523.25, duration: 0.1 },
+        { freq: 659.25, duration: 0.1 },
+        { freq: 783.99, duration: 0.2 }
+      ];
+      
+      let currentTime = audioContext.currentTime;
+      notes.forEach(note => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        osc.frequency.value = note.freq;
+        gain.gain.setValueAtTime(0.3, currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, currentTime + note.duration);
+        
+        osc.start(currentTime);
+        osc.stop(currentTime + note.duration);
+        
+        currentTime += note.duration;
+      });
+    } catch (e) {
+      // Silent mode
+    }
+  },
+
+  // Preview
   togglePreview() {
-    if (!this.imageURL) {
-      alert('Choose image from menu');
-      return;
+    if (this.elements.previewOverlay.classList.contains('active')) {
+      this.closePreview();
+    } else {
+      this.renderFullPreview();
+      this.elements.previewOverlay.classList.add('active');
     }
-
-    if (this.elements.previewContainer.style.display === 'block') {
-      this.elements.previewContainer.style.display = 'none';
-      this.elements.previewBtn.textContent = 'Preview';
-      return;
-    }
-
-    this.renderPreview();
-    this.elements.previewContainer.style.display = 'block';
-    this.elements.previewBtn.textContent = 'Hide image';
   },
 
-  renderPreview() {
-    const canvasSize = 500;
-    const pW = Math.floor(canvasSize / this.cols);
-    const pH = Math.floor(canvasSize / this.rows);
+  closePreview() {
+    this.elements.previewOverlay.classList.remove('active');
+  },
 
-    this.elements.previewPuzzle.innerHTML = '';
-    this.elements.previewPuzzle.style.gridTemplateColumns = `repeat(${this.cols}, ${pW}px)`;
-    this.elements.previewPuzzle.style.gridTemplateRows = `repeat(${this.rows}, ${pH}px)`;
+  renderFullPreview() {
+    const canvasSize = Math.min(500, window.innerWidth - 60);
+    const pW = Math.floor(canvasSize / this.state.cols);
+    const pH = Math.floor(canvasSize / this.state.rows);
 
-    for (let i = 0; i < this.cols * this.rows; i++) {
-      const row = Math.floor(i / this.cols);
-      const col = i % this.cols;
+    this.elements.fullPreviewPuzzle.innerHTML = '';
+    this.elements.fullPreviewPuzzle.style.gridTemplateColumns = `repeat(${this.state.cols}, ${pW}px)`;
+    this.elements.fullPreviewPuzzle.style.gridTemplateRows = `repeat(${this.state.rows}, ${pH}px)`;
+
+    for (let i = 0; i < this.state.cols * this.state.rows; i++) {
+      const row = Math.floor(i / this.state.cols);
+      const col = i % this.state.cols;
 
       const preview = document.createElement('div');
-      preview.className = 'previewPiece';
       preview.style.width = pW + 'px';
       preview.style.height = pH + 'px';
-      preview.style.backgroundImage = `url(${this.imageURL})`;
-      preview.style.backgroundSize = `${this.cols * pW}px ${this.rows * pH}px`;
+      preview.style.backgroundImage = `url(${this.state.imageURL})`;
+      preview.style.backgroundSize = `${this.state.cols * pW}px ${this.state.rows * pH}px`;
       preview.style.backgroundPosition = `-${col * pW}px -${row * pH}px`;
 
-      this.elements.previewPuzzle.appendChild(preview);
+      this.elements.fullPreviewPuzzle.appendChild(preview);
     }
   },
 
-  /* Timer */
+  // Timer
   startTimer() {
-    if (this.started) return;
+    if (this.state.started) return;
 
-    this.started = true;
-    this.startTime = performance.now();
+    this.state.started = true;
+    this.state.startTime = performance.now();
     
-    this.timer = setInterval(() => {
-      const elapsed = performance.now() - this.startTime;
-      const ms = Math.floor(elapsed % 1000).toString().padStart(3, '0');
-      const sec = Math.floor(elapsed / 1000) % 60;
-      const min = Math.floor(elapsed / 60000);
-      
-      this.elements.timerDisplay.textContent = 
-        `⏱️ Time: ${min}:${sec.toString().padStart(2, '0')}:${ms}`;
+    this.state.timer = setInterval(() => {
+      const elapsed = performance.now() - this.state.startTime;
+      this.elements.timer.textContent = this.formatTime(elapsed);
     }, 50);
   },
 
   stopTimer() {
-    clearInterval(this.timer);
+    clearInterval(this.state.timer);
   },
 
   resetTimer() {
-    clearInterval(this.timer);
-    this.started = false;
-    this.startTime = null;
-    this.elements.timerDisplay.textContent = '⏱️ Time: 0:00:000';
+    clearInterval(this.state.timer);
+    this.state.started = false;
+    this.state.startTime = null;
+    this.elements.timer.textContent = '0:00:000';
+  },
+
+  formatTime(ms) {
+    const sec = Math.floor(ms / 1000);
+    const min = Math.floor(sec / 60);
+    const secs = sec % 60;
+    const ms_disp = Math.floor(ms % 1000);
+    
+    return `${min}:${secs.toString().padStart(2, '0')}:${ms_disp.toString().padStart(3, '0')}`;
   },
 
   formatElapsedTime() {
-    if (!this.startTime) return '0:00:000';
-
-    const elapsed = performance.now() - this.startTime;
-    const ms = Math.floor(elapsed % 1000).toString().padStart(3, '0');
-    const sec = Math.floor(elapsed / 1000) % 60;
-    const min = Math.floor(elapsed / 60000);
-
-    return `${min}:${sec.toString().padStart(2, '0')}:${ms}`;
+    if (!this.state.startTime) return '0:00:000';
+    const elapsed = performance.now() - this.state.startTime;
+    return this.formatTime(elapsed);
   },
 
-  /* Touch Support */
+  updateHintsDisplay() {
+    this.elements.hintsCount.textContent = this.state.hintsUsed;
+  },
+
+  updateGridSize() {
+    this.elements.gridSize.textContent = `${this.state.cols}×${this.state.rows}`;
+  },
+
+  updateMessage(text) {
+    this.elements.message.textContent = text;
+  },
+
+  // Touch Support
   onTouchStart(e) {
     e.preventDefault();
     const piece = e.currentTarget;
-    this.touchDrag.piece = piece;
-    this.touchDrag.srcCell = piece.parentElement;
+    this.state.touchDrag.piece = piece;
+    this.state.touchDrag.srcCell = piece.parentElement;
     piece.classList.add('dragging');
-    if (!this.started) this.startTimer();
+    if (!this.state.started) this.startTimer();
   },
 
   onTouchMove(e) {
-    if (!this.touchDrag.piece) return;
+    if (!this.state.touchDrag.piece) return;
     e.preventDefault();
 
     const touch = e.changedTouches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     const cell = el ? el.closest('.cell') : null;
 
-    if (cell !== this.touchDrag.currentTargetCell) {
-      if (this.touchDrag.currentTargetCell) {
-        this.touchDrag.currentTargetCell.classList.remove('drop-target');
+    if (cell !== this.state.touchDrag.currentTargetCell) {
+      if (this.state.touchDrag.currentTargetCell) {
+        this.state.touchDrag.currentTargetCell.classList.remove('drop-target');
       }
-      this.touchDrag.currentTargetCell = cell;
+      this.state.touchDrag.currentTargetCell = cell;
       if (cell) cell.classList.add('drop-target');
     }
   },
 
   onTouchEnd(e) {
-    if (!this.touchDrag.piece) return;
+    if (!this.state.touchDrag.piece) return;
 
-    const piece = this.touchDrag.piece;
-    const targetCell = this.touchDrag.currentTargetCell;
+    const piece = this.state.touchDrag.piece;
+    const targetCell = this.state.touchDrag.currentTargetCell;
 
     piece.classList.remove('dragging');
 
-    if (targetCell && targetCell !== this.touchDrag.srcCell) {
+    if (targetCell && targetCell !== this.state.touchDrag.srcCell) {
       const targetPiece = targetCell.firstChild;
-      const srcCell = this.touchDrag.srcCell;
+      const srcCell = this.state.touchDrag.srcCell;
       srcCell.appendChild(targetPiece);
       targetCell.appendChild(piece);
-
-      /* Check after touch move */
       this.checkPuzzleCompletion();
     }
 
     document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
-    this.touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
-  },
-
-  /* Utility */
-  updateMessage(text) {
-    this.elements.message.textContent = text;
+    this.state.touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
   }
 };
 
-/* Add CSS for animation */
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes bounce {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.2); }
-  }
-`;
-document.head.appendChild(style);
-
-/* Initialize puzzle */
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-  puzzleModule.init();
+  game.init();
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
