@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Online puzzle - Play</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <h1>🧩 Online puzzle</h1>
+  <div id="topControls">
+    <span id="userInfo"></span>
+    <button id="loginLink" class="btn">Sign in</button>
+    <button id="logoutBtn" class="btn" style="display:none;">Sign out</button>
+    <button id="menuToggleBtn" class="btn">Menu</button>
+    <button id="previewBtn" class="btn">Preview</button>
+    <button id="shuffleBtn" class="btn" disabled>Shuffle</button>
+  </div>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main>
+  <div id="puzzleArea">
+    <!-- Controls -->
+    <div id="controls" aria-label="Controls">
+      <input type="file" id="imageUpload" accept="image/*" title="Upload image">
+      <label style="display:flex;align-items:center;gap:6px;">
+        <input type="checkbox" id="enableCheck" checked> Check positions
+      </label>
+      <div style="margin-left:auto;color:#666;font-size:0.95rem;">
+        Drag or click on tiles to rearrange them
+      </div>
+    </div>
+
+    <!-- Puzzle Grid -->
+    <div id="puzzle" aria-label="Puzzle area"></div>
+
+    <!-- Preview -->
+    <div id="previewContainer" aria-hidden="true">
+      <h3 style="margin:8px 0 6px;">Preview:</h3>
+      <div id="previewPuzzle"></div>
+    </div>
+
+    <!-- Game Info -->
+    <div id="message" aria-live="polite">
+      Click "Menu" at the top to select an image and size.
+    </div>
+    <h3 id="timer">Time: 0:00:000</h3>
+    <span id="hintsCount" style="color:#666;"></span>
+  </div>
+</main>
+
+<!-- ===== COMPLETION MODAL ===== -->
+<div id="overlayComplete" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal" role="document">
+    <h2>🎉 The puzzle is complete!</h2>
+    <p id="overlayTime">Time: 0:00:000</p>
+    <p id="overlayHints">Hints used: 0</p>
+    <p id="overlayImageName" style="font-size:0.9rem;color:#888;"></p>
+    <div id="saveSection" style="display:none;margin:16px 0;padding:12px;background:#f5f5f5;border-radius:6px;">
+      <p style="margin:0 0 8px;font-size:0.9rem;color:#666;">Save your result?</p>
+      <button id="overlaySave" class="btn primary" style="width:100%;">Save result</button>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+      <button id="overlayShuffle" class="btn">Shuffle</button>
+      <button id="overlayNew" class="btn primary">Create new puzzle</button>
+      <button id="overlayClose" class="btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MENU MODAL ===== -->
+<div id="menuOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="menu" role="document" aria-label="Image and size selection menu">
+    <div id="menuSidebar">
+      <h3 style="margin:0 0 8px 0;">Choose image</h3>
+      <div id="presetList"></div>
+      <div style="margin-top:10px;">
+        <label style="font-size:0.9rem;">Upload yours</label>
+        <input type="file" id="menuUpload" accept="image/*" style="width:100%;margin-top:6px;">
+      </div>
+    </div>
+
+    <div id="menuRight">
+      <h3 style="margin:0;">Choose size</h3>
+      <div class="presetSizes" id="presetSizes">
+        <button data-cols="3" data-rows="3">3 × 3</button>
+        <button data-cols="5" data-rows="6" class="active">5 × 6</button>
+        <button data-cols="8" data-rows="6">8 × 6</button>
+        <button data-cols="10" data-rows="8">10 × 8</button>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label>Custom:
+          <input type="number" id="menuCols" min="1" max="30" value="5" style="width:70px;margin-left:6px">
+          ×
+          <input type="number" id="menuRows" min="1" max="30" value="6" style="width:70px;margin-left:6px">
+        </label>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:auto;">
+        <button id="menuCreate" class="btn primary">Create puzzle</button>
+        <button id="menuUseUploaded" class="btn">Use uploaded</button>
+        <button id="menuClose" class="btn">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="puzzle.js"></script>
+
+</body>
+</html>
