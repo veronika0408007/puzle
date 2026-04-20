@@ -42,6 +42,7 @@ const puzzleModule = {
   selectedPiece: null,
   hintsUsed: 0,
   isLoggedIn: false,
+  touchDrag: { piece: null, srcCell: null, currentTargetCell: null },
 
   /* DOM Elements */
   elements: {
@@ -88,13 +89,19 @@ const puzzleModule = {
 
   /* Initialize */
   init() {
+    console.log('✅ Puzzle module initializing...');
+    
     this.selectedPreset = this.presets[0];
     this.imageURL = this.selectedPreset.url;
     this.currentImageName = this.selectedPreset.title;
     
+    console.log('🖼️ Default preset:', this.selectedPreset.title);
+    
     this.buildPresets();
     this.attachEventListeners();
     this.checkAuthStatus();
+    
+    console.log('✅ Puzzle module initialized!');
   },
 
   /* Check Auth Status */
@@ -108,6 +115,7 @@ const puzzleModule = {
       this.updateUserUI(user);
       this.elements.saveSection.style.display = 'block';
       this.elements.authPrompt.style.display = 'none';
+      console.log('✅ User logged in:', user.fullName);
     } else {
       this.isLoggedIn = false;
       this.elements.userInfo.textContent = '';
@@ -115,6 +123,7 @@ const puzzleModule = {
       this.elements.logoutBtn.style.display = 'none';
       this.elements.saveSection.style.display = 'none';
       this.elements.authPrompt.style.display = 'block';
+      console.log('❌ User not logged in');
     }
   },
 
@@ -127,6 +136,13 @@ const puzzleModule = {
 
   /* Build Preset Thumbnails */
   buildPresets() {
+    console.log('🎨 Building presets...');
+    
+    if (!this.elements.presetList) {
+      console.error('❌ presetList element not found!');
+      return;
+    }
+    
     this.presets.forEach(p => {
       const el = document.createElement('div');
       el.className = 'presetItem';
@@ -139,11 +155,15 @@ const puzzleModule = {
       this.elements.presetList.appendChild(el);
     });
     
-    if (this.elements.presetList.firstChild) this.elements.presetList.firstChild.classList.add('selected');
+    if (this.elements.presetList.firstChild) {
+      this.elements.presetList.firstChild.classList.add('selected');
+      console.log('✅ Presets built');
+    }
   },
 
   /* Select Preset */
   selectPreset(preset, element) {
+    console.log('📸 Selected:', preset.title);
     document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
     this.selectedPreset = preset;
@@ -153,57 +173,168 @@ const puzzleModule = {
 
   /* Attach Event Listeners */
   attachEventListeners() {
-    /* Menu */
-    this.elements.menuToggleBtn.addEventListener('click', () => this.toggleMenu());
-    this.elements.menuClose.addEventListener('click', () => this.closeMenu());
-    this.elements.menuOverlay.addEventListener('click', (e) => {
-      if (e.target === this.elements.menuOverlay) this.closeMenu();
-    });
+    console.log('🔗 Attaching event listeners...');
+    
+    /* Menu Toggle */
+    if (this.elements.menuToggleBtn) {
+      this.elements.menuToggleBtn.addEventListener('click', () => {
+        console.log('📋 Menu toggle clicked');
+        this.toggleMenu();
+      });
+    }
+    
+    if (this.elements.menuClose) {
+      this.elements.menuClose.addEventListener('click', () => {
+        console.log('📋 Menu close clicked');
+        this.closeMenu();
+      });
+    }
+    
+    if (this.elements.menuOverlay) {
+      this.elements.menuOverlay.addEventListener('click', (e) => {
+        if (e.target === this.elements.menuOverlay) {
+          console.log('📋 Overlay click - closing menu');
+          this.closeMenu();
+        }
+      });
+    }
     
     /* Auth */
-    this.elements.loginLink.addEventListener('click', () => window.location.href = '../auth/index.html');
-    this.elements.logoutBtn.addEventListener('click', () => this.logout());
+    if (this.elements.loginLink) {
+      this.elements.loginLink.addEventListener('click', () => {
+        console.log('🔐 Login clicked');
+        window.location.href = '../auth/index.html';
+      });
+    }
+    
+    if (this.elements.logoutBtn) {
+      this.elements.logoutBtn.addEventListener('click', () => {
+        console.log('🔐 Logout clicked');
+        this.logout();
+      });
+    }
     
     /* Image Upload */
-    this.elements.imageUpload.addEventListener('change', (e) => this.handleQuickUpload(e));
-    this.elements.menuUpload.addEventListener('change', (e) => this.handleMenuUpload(e));
+    if (this.elements.imageUpload) {
+      this.elements.imageUpload.addEventListener('change', (e) => {
+        console.log('📁 Quick upload');
+        this.handleQuickUpload(e);
+      });
+    }
+    
+    if (this.elements.menuUpload) {
+      this.elements.menuUpload.addEventListener('change', (e) => {
+        console.log('📁 Menu upload');
+        this.handleMenuUpload(e);
+      });
+    }
     
     /* Menu Controls */
-    this.elements.presetSizes.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => this.selectSize(btn));
-    });
+    if (this.elements.presetSizes) {
+      this.elements.presetSizes.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          console.log('📏 Size selected:', btn.dataset.cols, 'x', btn.dataset.rows);
+          this.selectSize(btn);
+        });
+      });
+    }
     
-    this.elements.menuCreate.addEventListener('click', () => this.createPuzzleFromMenu());
-    this.elements.menuUseUploaded.addEventListener('click', () => this.useUploadedImage());
+    if (this.elements.menuCreate) {
+      this.elements.menuCreate.addEventListener('click', () => {
+        console.log('🎮 Create puzzle clicked');
+        this.createPuzzleFromMenu();
+      });
+    }
+    
+    if (this.elements.menuUseUploaded) {
+      this.elements.menuUseUploaded.addEventListener('click', () => {
+        console.log('📁 Use uploaded clicked');
+        this.useUploadedImage();
+      });
+    }
     
     /* Puzzle Controls */
-    this.elements.previewBtn.addEventListener('click', () => this.togglePreview());
-    this.elements.shuffleBtn.addEventListener('click', () => this.handleShuffle());
-    this.elements.enableCheckEl.addEventListener('change', () => this.handleCheckToggle());
+    if (this.elements.previewBtn) {
+      this.elements.previewBtn.addEventListener('click', () => {
+        console.log('👁️ Preview toggled');
+        this.togglePreview();
+      });
+    }
     
-    /* Completion Overlay */
-    this.elements.overlayShuffle.addEventListener('click', () => this.handleShuffle());
-    this.elements.overlayNew.addEventListener('click', () => this.openMenu());
-    this.elements.overlayClose.addEventListener('click', () => this.hideComplete());
-    this.elements.overlaySave.addEventListener('click', () => this.savePuzzleResult());
-    this.elements.resultSignup.addEventListener('click', () => window.location.href = '../auth/index.html');
+    if (this.elements.shuffleBtn) {
+      this.elements.shuffleBtn.addEventListener('click', () => {
+        console.log('🔀 Shuffle clicked');
+        this.handleShuffle();
+      });
+    }
+    
+    if (this.elements.enableCheckEl) {
+      this.elements.enableCheckEl.addEventListener('change', () => {
+        console.log('✓ Check toggle:', this.elements.enableCheckEl.checked);
+        this.handleCheckToggle();
+      });
+    }
+    
+    /* Completion */
+    if (this.elements.overlayShuffle) {
+      this.elements.overlayShuffle.addEventListener('click', () => {
+        console.log('🔀 Shuffle from completion');
+        this.handleShuffle();
+      });
+    }
+    
+    if (this.elements.overlayNew) {
+      this.elements.overlayNew.addEventListener('click', () => {
+        console.log('➕ New puzzle from completion');
+        this.openMenu();
+      });
+    }
+    
+    if (this.elements.overlayClose) {
+      this.elements.overlayClose.addEventListener('click', () => {
+        console.log('✕ Close completion');
+        this.hideComplete();
+      });
+    }
+    
+    if (this.elements.overlaySave) {
+      this.elements.overlaySave.addEventListener('click', () => {
+        console.log('💾 Save result');
+        this.savePuzzleResult();
+      });
+    }
+    
+    if (this.elements.resultSignup) {
+      this.elements.resultSignup.addEventListener('click', () => {
+        console.log('📝 Signup from completion');
+        window.location.href = '../auth/index.html';
+      });
+    }
+    
+    if (this.elements.overlayComplete) {
+      this.elements.overlayComplete.addEventListener('click', (e) => {
+        if (e.target === this.elements.overlayComplete) {
+          console.log('✕ Overlay click - closing completion');
+          this.hideComplete();
+        }
+      });
+    }
     
     /* Keyboard */
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        console.log('⌨️ Escape pressed');
         if (this.elements.menuOverlay.style.display === 'flex') this.closeMenu();
         if (this.elements.overlayComplete.style.display === 'flex') this.hideComplete();
       }
     });
-
-    /* Click outside completion modal to close */
-    this.elements.overlayComplete.addEventListener('click', (e) => {
-      if (e.target === this.elements.overlayComplete) this.hideComplete();
-    });
+    
+    console.log('✅ Event listeners attached');
   },
 
   /* Auth Functions */
   logout() {
+    console.log('🔐 Logging out...');
     sessionStorage.removeItem('userToken');
     sessionStorage.removeItem('userData');
     this.isLoggedIn = false;
@@ -213,6 +344,7 @@ const puzzleModule = {
 
   /* Menu Functions */
   toggleMenu() {
+    console.log('📋 toggleMenu called, current display:', this.elements.menuOverlay.style.display);
     if (this.elements.menuOverlay.style.display === 'flex') {
       this.closeMenu();
     } else {
@@ -221,19 +353,29 @@ const puzzleModule = {
   },
 
   openMenu() {
+    console.log('📋 Opening menu...');
     this.elements.menuOverlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    console.log('✅ Menu opened');
   },
 
   closeMenu() {
+    console.log('📋 Closing menu...');
     this.elements.menuOverlay.style.display = 'none';
     document.body.style.overflow = '';
+    console.log('✅ Menu closed');
   },
 
   /* Upload Handlers */
   handleQuickUpload(e) {
+    console.log('📁 handleQuickUpload called');
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('❌ No file selected');
+      return;
+    }
+    
+    console.log('📁 File selected:', file.name);
     
     if (this.uploadedURL) URL.revokeObjectURL(this.uploadedURL);
     this.uploadedURL = URL.createObjectURL(file);
@@ -244,8 +386,14 @@ const puzzleModule = {
   },
 
   handleMenuUpload(e) {
+    console.log('📁 handleMenuUpload called');
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log('❌ No file selected');
+      return;
+    }
+    
+    console.log('📁 File selected:', file.name);
     
     if (this.uploadedURL) URL.revokeObjectURL(this.uploadedURL);
     this.uploadedURL = URL.createObjectURL(file);
@@ -258,29 +406,40 @@ const puzzleModule = {
 
   /* Size Selection */
   selectSize(button) {
+    console.log('📏 selectSize called');
     this.elements.presetSizes.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     button.classList.add('active');
     this.elements.menuCols.value = button.dataset.cols;
     this.elements.menuRows.value = button.dataset.rows;
+    console.log('✅ Size set to', button.dataset.cols, 'x', button.dataset.rows);
   },
 
   /* Create Puzzle */
   createPuzzleFromMenu() {
+    console.log('🎮 createPuzzleFromMenu called');
+    
     const cols = Math.max(1, Math.min(30, +this.elements.menuCols.value || 1));
     const rows = Math.max(1, Math.min(30, +this.elements.menuRows.value || 1));
     
+    console.log('📐 Dimensions:', cols, 'x', rows);
+    console.log('🖼️ Image URL:', this.imageURL ? 'set' : 'NOT SET');
+    
     if (!this.imageURL) {
       alert('Select or upload an image from the menu.');
+      console.log('❌ No image selected');
       return;
     }
     
+    console.log('✅ Creating puzzle...');
     this.createPuzzle(this.imageURL, cols, rows);
     this.closeMenu();
   },
 
   useUploadedImage() {
+    console.log('📁 useUploadedImage called');
     if (!this.uploadedURL) {
       alert('First, upload your image to the menu (file).');
+      console.log('❌ No uploaded URL');
       return;
     }
     
@@ -288,16 +447,21 @@ const puzzleModule = {
     this.selectedPreset = null;
     document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
     this.updateMessage('The uploaded image is used. Click "Create Puzzle."');
+    console.log('✅ Uploaded image set');
   },
 
   /* Main Puzzle Creation */
   createPuzzle(imgSrc, cols, rows) {
+    console.log('🧩 createPuzzle called with', cols, 'x', rows);
+    
     this.cols = cols;
     this.rows = rows;
     
     const canvasSize = 500;
     this.pieceWidth = Math.floor(canvasSize / cols);
     this.pieceHeight = Math.floor(canvasSize / rows);
+
+    console.log('📏 Piece size:', this.pieceWidth, 'x', this.pieceHeight);
 
     /* Reset state */
     this.elements.puzzle.innerHTML = '';
@@ -312,6 +476,8 @@ const puzzleModule = {
     this.elements.puzzle.style.gridTemplateColumns = `repeat(${cols}, ${this.pieceWidth}px)`;
     this.elements.puzzle.style.gridTemplateRows = `repeat(${rows}, ${this.pieceHeight}px)`;
 
+    console.log('🎨 Creating', cols * rows, 'pieces...');
+
     /* Create cells and pieces */
     for (let i = 0; i < cols * rows; i++) {
       const cell = this.createCell(i, imgSrc);
@@ -325,6 +491,8 @@ const puzzleModule = {
     this.elements.previewContainer.style.display = 'none';
     this.elements.previewPuzzle.innerHTML = '';
     this.updateMessage('The puzzle is complete. Start solving!');
+    
+    console.log('✅ Puzzle created! Ready to play.');
   },
 
   /* Create Single Cell */
@@ -335,8 +503,15 @@ const puzzleModule = {
     cell.style.height = this.pieceHeight + 'px';
     cell.dataset.index = index;
 
-    cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('drop-target'); });
-    cell.addEventListener('dragleave', () => cell.classList.remove('drop-target'));
+    cell.addEventListener('dragover', e => { 
+      e.preventDefault(); 
+      cell.classList.add('drop-target'); 
+    });
+    
+    cell.addEventListener('dragleave', () => {
+      cell.classList.remove('drop-target');
+    });
+    
     cell.addEventListener('drop', (e) => this.onDropOnCell(e, cell));
 
     /* Create piece */
@@ -347,7 +522,7 @@ const puzzleModule = {
 
     const row = Math.floor(index / this.cols), col = index % this.cols;
     
-    piece.style.backgroundImage = `url(${imgSrc})`;
+    piece.style.backgroundImage = `url('${imgSrc}')`;
     piece.style.backgroundSize = `${this.cols * this.pieceWidth}px ${this.rows * this.pieceHeight}px`;
     piece.style.backgroundPosition = `-${col * this.pieceWidth}px -${row * this.pieceHeight}px`;
     piece.dataset.correct = index;
@@ -359,6 +534,7 @@ const puzzleModule = {
       piece.classList.add('dragging');
       if (!this.started) this.startTimer();
     });
+    
     piece.addEventListener('dragend', () => {
       piece.classList.remove('dragging');
       document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
@@ -428,9 +604,9 @@ const puzzleModule = {
     this.cells.forEach((cell, index) => {
       const piece = cell.firstChild;
       if (+piece.dataset.correct === index) {
-        piece.style.border = '2px solid var(--success)';
+        piece.style.border = '2px solid #4caf50';
       } else {
-        piece.style.border = '2px solid var(--error)';
+        piece.style.border = '2px solid #f44336';
         solved = false;
       }
     });
@@ -453,7 +629,7 @@ const puzzleModule = {
       this.hintsUsed++;
       this.updateHintsDisplay();
       this.checkPositions();
-      this.updateMessage('Position checking is enabled. Correct/incorrect tiles are highlighted.');
+      this.updateMessage('Position checking is enabled.');
     } else {
       document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
       this.updateMessage('Position checking is disabled.');
@@ -467,6 +643,7 @@ const puzzleModule = {
 
   /* Shuffle */
   handleShuffle() {
+    console.log('🔀 Shuffle called');
     this.hideComplete();
     this.shuffle();
     this.resetTimer();
@@ -492,6 +669,8 @@ const puzzleModule = {
 
   /* Finish Puzzle */
   finishPuzzle() {
+    console.log('🎉 Puzzle completed!');
+    
     if (this.solvedAlready) return;
 
     this.solvedAlready = true;
@@ -508,17 +687,21 @@ const puzzleModule = {
 
   /* Show/Hide Complete */
   showComplete() {
+    console.log('✅ Showing completion overlay');
     this.elements.overlayComplete.style.display = 'flex';
     document.body.style.overflow = 'hidden';
   },
 
   hideComplete() {
+    console.log('✅ Hiding completion overlay');
     this.elements.overlayComplete.style.display = 'none';
     document.body.style.overflow = '';
   },
 
   /* Save Result */
   savePuzzleResult() {
+    console.log('💾 Saving puzzle result...');
+    
     if (!this.isLoggedIn) {
       alert('Please sign in to save your result');
       return;
@@ -542,9 +725,11 @@ const puzzleModule = {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
+        console.log('✅ Result saved');
         this.updateMessage(`✓ Puzzle result saved!`);
         setTimeout(() => this.hideComplete(), 1500);
       } else {
+        console.log('❌ Save error:', data.error);
         alert('Error saving result');
       }
     })
@@ -554,8 +739,87 @@ const puzzleModule = {
     });
   },
 
+  /* Play Completion Animation */
+  playCompletionAnimation() {
+    console.log('🎆 Playing completion animation');
+    
+    const celebMsg = document.createElement('div');
+    celebMsg.style.position = 'fixed';
+    celebMsg.style.top = '50%';
+    celebMsg.style.left = '50%';
+    celebMsg.style.fontSize = '5rem';
+    celebMsg.style.zIndex = '2001';
+    celebMsg.style.pointerEvents = 'none';
+    celebMsg.style.animation = 'bounce 0.8s ease-in-out';
+    celebMsg.textContent = '🎉';
+    document.body.appendChild(celebMsg);
+    
+    setTimeout(() => celebMsg.remove(), 800);
+    
+    this.createConfetti();
+    this.playSound();
+  },
+
+  createConfetti() {
+    const emojis = ['🎉', '🎊', '⭐', '✨', '🌟'];
+    for (let i = 0; i < 15; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.style.position = 'fixed';
+        el.style.fontSize = '3rem';
+        el.style.zIndex = '2001';
+        el.style.pointerEvents = 'none';
+        el.style.animation = 'confetti-fall 1s ease-out forwards';
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        
+        const x = Math.random() * window.innerWidth;
+        const tx = (Math.random() - 0.5) * 200;
+        
+        el.style.left = x + 'px';
+        el.style.top = '-50px';
+        el.style.setProperty('--tx', tx + 'px');
+        
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+      }, i * 30);
+    }
+  },
+
+  playSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [
+        { freq: 523.25, duration: 0.1 },
+        { freq: 659.25, duration: 0.1 },
+        { freq: 783.99, duration: 0.2 }
+      ];
+      
+      let currentTime = audioContext.currentTime;
+      notes.forEach(note => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        
+        osc.frequency.value = note.freq;
+        gain.gain.setValueAtTime(0.3, currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, currentTime + note.duration);
+        
+        osc.start(currentTime);
+        osc.stop(currentTime + note.duration);
+        
+        currentTime += note.duration;
+      });
+    } catch (e) {
+      console.log('🔇 Sound unavailable');
+    }
+  },
+
   /* Preview */
   togglePreview() {
+    console.log('👁️ togglePreview called');
+    
     if (!this.imageURL) {
       alert('Choose image from menu');
       return;
@@ -585,7 +849,7 @@ const puzzleModule = {
       const pp = document.createElement('div');
       pp.style.width = pW + 'px';
       pp.style.height = pH + 'px';
-      pp.style.backgroundImage = `url(${this.imageURL})`;
+      pp.style.backgroundImage = `url('${this.imageURL}')`;
       pp.style.backgroundSize = `${this.cols * pW}px ${this.rows * pH}px`;
       pp.style.backgroundPosition = `-${col * pW}px -${row * pH}px`;
       this.elements.previewPuzzle.appendChild(pp);
@@ -605,11 +869,13 @@ const puzzleModule = {
       const sec = Math.floor(elapsed / 1000) % 60;
       const min = Math.floor(elapsed / 60000);
       
-      this.timerDisplay.textContent = `Time: ${min}:${sec.toString().padStart(2, '0')}:${ms}`;
+      this.elements.timerDisplay.textContent = `Time: ${min}:${sec.toString().padStart(2, '0')}:${ms}`;
     }, 50);
   },
 
-  stopTimer() { clearInterval(this.timer); }
+  stopTimer() { 
+    clearInterval(this.timer); 
+  },
 
   resetTimer() {
     clearInterval(this.timer);
@@ -628,8 +894,6 @@ const puzzleModule = {
   },
 
   /* Touch Support */
-  touchDrag: { piece: null, srcCell: null, currentTargetCell: null },
-
   onTouchStart(e) {
     e.preventDefault();
     const piece = e.currentTarget;
@@ -689,5 +953,12 @@ const puzzleModule = {
 
 /* Initialize puzzle */
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('📄 DOM Content Loaded - Initializing puzzle...');
   puzzleModule.init();
 });
+
+// Также попытаемся инициализировать, если скрипт загружается после DOM
+if (document.readyState !== 'loading') {
+  console.log('📄 DOM already loaded - Initializing puzzle...');
+  puzzleModule.init();
+}
