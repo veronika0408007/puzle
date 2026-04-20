@@ -42,6 +42,7 @@ const puzzleModule = {
   selectedPiece: null,
   hintsUsed: 0,
   isLoggedIn: false,
+  touchDrag: { piece: null, srcCell: null, currentTargetCell: null },
 
   /* DOM Elements */
   elements: {
@@ -192,14 +193,6 @@ const puzzleModule = {
         if (this.elements.overlayComplete.classList.contains('active')) this.hideComplete();
       }
     });
-
-    /* Cell Click Exchange */
-    document.addEventListener('click', (e) => {
-      const cell = e.target.closest('.cell');
-      if (cell && this.selectedPiece) {
-        this.exchangePieces(cell);
-      }
-    });
   },
 
   /* Auth Functions */
@@ -244,7 +237,7 @@ const puzzleModule = {
     this.imageURL = this.uploadedURL;
     this.currentImageName = file.name;
     
-    this.updateMessage('A custom image has been uploaded. Open the menu and click "Create Puzzle."');
+    this.updateMessage('📁 A custom image has been uploaded. Open the menu and click "Create Puzzle."');
   },
 
   handleMenuUpload(e) {
@@ -291,7 +284,7 @@ const puzzleModule = {
     this.imageURL = this.uploadedURL;
     this.selectedPreset = null;
     document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
-    this.updateMessage('The uploaded image is used. Click "Create Puzzle."');
+    this.updateMessage('✓ The uploaded image is used. Click "Create Puzzle."');
   },
 
   /* Main Puzzle Creation */
@@ -328,7 +321,7 @@ const puzzleModule = {
     this.resetTimer();
     this.elements.previewContainer.style.display = 'none';
     this.elements.previewPuzzle.innerHTML = '';
-    this.updateMessage('The puzzle is complete. Start solving!');
+    this.updateMessage('🎮 The puzzle is complete. Start solving!');
   },
 
   /* Create Single Cell */
@@ -404,11 +397,8 @@ const puzzleModule = {
     cell.appendChild(dragged);
     dragged.classList.remove('selected', 'dragging');
 
-    if (this.elements.enableCheckEl.checked) {
-      this.checkPositions();
-    } else if (this.isSolved()) {
-      this.finishPuzzle();
-    }
+    /* Check after move */
+    this.checkPuzzleCompletion();
   },
 
   /* Click Selection */
@@ -429,30 +419,12 @@ const puzzleModule = {
     }
   },
 
-  /* Cell Click Exchange */
-  exchangePieces(targetCell) {
-    if (!this.selectedPiece || !targetCell) return;
-
-    const targetPiece = targetCell.firstChild;
-    const sourceCell = this.selectedPiece.parentElement;
-    
-    if (targetPiece === this.selectedPiece) return;
-
-    sourceCell.appendChild(targetPiece);
-    targetCell.appendChild(this.selectedPiece);
-    this.selectedPiece.classList.remove('selected');
-    this.selectedPiece = null;
-
-    if (this.elements.enableCheckEl.checked) {
-      this.checkPositions();
-    } else if (this.isSolved()) {
-      this.finishPuzzle();
-    }
-  },
+  /* Cell Click Exchange - REMOVED BUGGY CODE */
+  /* The puzzle is now controlled only by drag-drop and check positions */
 
   /* Check Positions */
   checkPositions() {
-    if (!this.cells.length || !this.elements.enableCheckEl.checked) return;
+    if (!this.cells.length) return;
 
     let solved = true;
     this.cells.forEach((cell, index) => {
@@ -470,11 +442,28 @@ const puzzleModule = {
     }
   },
 
-  /* Check if Solved */
+  /* Check if Solved Without Visual Feedback */
   isSolved() {
     return this.cells.length && this.cells.every((cell, index) => 
       +cell.firstChild.dataset.correct === index
     );
+  },
+
+  /* Main Check Function After Every Move */
+  checkPuzzleCompletion() {
+    if (this.solvedAlready) return;
+
+    if (this.elements.enableCheckEl.checked) {
+      /* Visual check mode */
+      this.hintsUsed++;
+      this.updateHintsDisplay();
+      this.checkPositions();
+    } else {
+      /* Silent mode - only check if fully solved */
+      if (this.isSolved()) {
+        this.finishPuzzle();
+      }
+    }
   },
 
   /* Handle Check Toggle */
@@ -483,10 +472,10 @@ const puzzleModule = {
       this.hintsUsed++;
       this.updateHintsDisplay();
       this.checkPositions();
-      this.updateMessage('Position checking is enabled. Correct/incorrect tiles are highlighted.');
+      this.updateMessage('✓ Position checking enabled. Correct/incorrect tiles highlighted.');
     } else {
       document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
-      this.updateMessage('Position checking is disabled.');
+      this.updateMessage('✗ Position checking disabled. Puzzle will complete when fully solved.');
     }
   },
 
@@ -503,7 +492,7 @@ const puzzleModule = {
     this.solvedAlready = false;
     this.hintsUsed = 0;
     this.updateHintsDisplay();
-    this.updateMessage('The puzzle is shuffled');
+    this.updateMessage('🔀 The puzzle is shuffled');
   },
 
   shuffle() {
@@ -521,17 +510,17 @@ const puzzleModule = {
     document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
   },
 
-  /* Finish Puzzle */
+  /* Finish Puzzle - ONLY WHEN FULLY SOLVED */
   finishPuzzle() {
     if (this.solvedAlready) return;
 
     this.solvedAlready = true;
     this.stopTimer();
     
-    this.updateMessage('The puzzle is complete! 🎉');
-    this.elements.overlayTime.textContent = `Time: ${this.formatElapsedTime()}`;
-    this.elements.overlayHints.textContent = `Hints used: ${this.hintsUsed}`;
-    this.elements.overlayImageName.textContent = `Image: ${this.currentImageName}`;
+    this.updateMessage('🎉 The puzzle is complete!');
+    this.elements.overlayTime.textContent = `⏱️ Time: ${this.formatElapsedTime()}`;
+    this.elements.overlayHints.textContent = `💡 Hints used: ${this.hintsUsed}`;
+    this.elements.overlayImageName.textContent = `📸 Image: ${this.currentImageName}`;
     
     this.showComplete();
   },
@@ -573,7 +562,7 @@ const puzzleModule = {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        this.updateMessage(`✓ Puzzle result saved!`);
+        this.updateMessage(`✅ Puzzle result saved!`);
       } else {
         alert('Error saving result');
       }
@@ -643,7 +632,7 @@ const puzzleModule = {
       const min = Math.floor(elapsed / 60000);
       
       this.elements.timerDisplay.textContent = 
-        `Time: ${min}:${sec.toString().padStart(2, '0')}:${ms}`;
+        `⏱️ Time: ${min}:${sec.toString().padStart(2, '0')}:${ms}`;
     }, 50);
   },
 
@@ -655,7 +644,7 @@ const puzzleModule = {
     clearInterval(this.timer);
     this.started = false;
     this.startTime = null;
-    this.elements.timerDisplay.textContent = 'Time: 0:00:000';
+    this.elements.timerDisplay.textContent = '⏱️ Time: 0:00:000';
   },
 
   formatElapsedTime() {
@@ -670,8 +659,6 @@ const puzzleModule = {
   },
 
   /* Touch Support */
-  touchDrag: { piece: null, srcCell: null, currentTargetCell: null },
-
   onTouchStart(e) {
     e.preventDefault();
     const piece = e.currentTarget;
@@ -712,11 +699,8 @@ const puzzleModule = {
       srcCell.appendChild(targetPiece);
       targetCell.appendChild(piece);
 
-      if (this.elements.enableCheckEl.checked) {
-        this.checkPositions();
-      } else if (this.isSolved()) {
-        this.finishPuzzle();
-      }
+      /* Check after touch move */
+      this.checkPuzzleCompletion();
     }
 
     document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
@@ -733,3 +717,33 @@ const puzzleModule = {
 document.addEventListener('DOMContentLoaded', () => {
   puzzleModule.init();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
