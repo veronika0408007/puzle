@@ -1,127 +1,131 @@
-/* ===== PUZZLE GAME MODULE ===== */
-const game = {
-  // Configuration
+/* ===== PUZZLE MODULE ===== */
+const puzzleModule = {
+  /* Configuration */
   presets: [
-    { id: 'p1', title: 'Mountain', url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' },
-    { id: 'p2', title: 'City', url: 'https://www.latvia.travel/sites/default/files/styles/mobile_promo/public/media_image/37315458162_8e53834697_k.jpg?itok=E_xOti-8' },
-    { id: 'p3', title: 'Forest', url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200&auto=format&fit=crop' },
-    { id: 'p4', title: 'Ocean', url: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=1200&auto=format&fit=crop' }
+    { 
+      id: 'p1', 
+      title: 'Mountain', 
+      url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' 
+    },
+    { 
+      id: 'p2', 
+      title: 'City', 
+      url: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=1200&auto=format&fit=crop' 
+    },
+    { 
+      id: 'p3', 
+      title: 'Forest', 
+      url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1200&auto=format&fit=crop' 
+    },
+    { 
+      id: 'p4', 
+      title: 'Ocean', 
+      url: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=1200&auto=format&fit=crop' 
+    }
   ],
 
-  // State
-  state: {
-    selectedPreset: null,
-    uploadedURL: '',
-    imageURL: '',
-    currentImageName: 'Custom',
-    cols: 5,
-    rows: 6,
-    pieceWidth: 100,
-    pieceHeight: 100,
-    cells: [],
-    started: false,
-    startTime: null,
-    timer: null,
-    solvedAlready: false,
-    selectedPiece: null,
-    hintsUsed: 0,
-    isLoggedIn: false,
-    touchDrag: { piece: null, srcCell: null, currentTargetCell: null }
-  },
+  /* State */
+  selectedPreset: null,
+  uploadedURL: '',
+  imageURL: '',
+  currentImageName: 'custom',
+  cols: 5,
+  rows: 6,
+  pieceWidth: 100,
+  pieceHeight: 100,
+  cells: [],
+  started: false,
+  startTime: null,
+  timer: null,
+  pieceIdCounter: 0,
+  solvedAlready: false,
+  selectedPiece: null,
+  hintsUsed: 0,
+  isLoggedIn: false,
 
-  // DOM Elements
+  /* DOM Elements */
   elements: {
-    setupOverlay: document.getElementById('setupOverlay'),
-    setupCreate: document.getElementById('setupCreate'),
+    menuToggleBtn: document.getElementById('menuToggleBtn'),
+    menuOverlay: document.getElementById('menuOverlay'),
+    menuClose: document.getElementById('menuClose'),
     presetList: document.getElementById('presetList'),
     menuUpload: document.getElementById('menuUpload'),
-    presetSizes: document.getElementById('presetSizes'),
     menuCols: document.getElementById('menuCols'),
     menuRows: document.getElementById('menuRows'),
+    menuCreate: document.getElementById('menuCreate'),
+    menuUseUploaded: document.getElementById('menuUseUploaded'),
+    presetSizes: document.getElementById('presetSizes'),
     
+    imageUpload: document.getElementById('imageUpload'),
     puzzle: document.getElementById('puzzle'),
-    newPuzzleBtn: document.getElementById('newPuzzleBtn'),
     previewBtn: document.getElementById('previewBtn'),
-    checkBtn: document.getElementById('checkBtn'),
     shuffleBtn: document.getElementById('shuffleBtn'),
+    enableCheckEl: document.getElementById('enableCheck'),
     
     previewContainer: document.getElementById('previewContainer'),
     previewPuzzle: document.getElementById('previewPuzzle'),
-    fullPreviewPuzzle: document.getElementById('fullPreviewPuzzle'),
-    previewOverlay: document.getElementById('previewOverlay'),
     
-    gameHeader: document.getElementById('gameHeader'),
     message: document.getElementById('message'),
-    timer: document.getElementById('timer'),
-    hintsCount: document.getElementById('hintsCount'),
-    gridSize: document.getElementById('gridSize'),
+    timerDisplay: document.getElementById('timer'),
+    hintsCountDisplay: document.getElementById('hintsCount'),
     
-    completionOverlay: document.getElementById('completionOverlay'),
-    resultTime: document.getElementById('resultTime'),
-    resultHints: document.getElementById('resultHints'),
-    resultDifficulty: document.getElementById('resultDifficulty'),
-    resultImageName: document.getElementById('resultImageName'),
+    overlayComplete: document.getElementById('overlayComplete'),
+    overlayTime: document.getElementById('overlayTime'),
+    overlayHints: document.getElementById('overlayHints'),
+    overlayImageName: document.getElementById('overlayImageName'),
+    overlayShuffle: document.getElementById('overlayShuffle'),
+    overlaySave: document.getElementById('overlaySave'),
+    overlayNew: document.getElementById('overlayNew'),
+    overlayClose: document.getElementById('overlayClose'),
+    saveSection: document.getElementById('saveSection'),
     authPrompt: document.getElementById('authPrompt'),
     resultSignup: document.getElementById('resultSignup'),
-    resultSave: document.getElementById('resultSave'),
-    resultNew: document.getElementById('resultNew'),
-    resultClose: document.getElementById('resultClose'),
-    saveSection: document.getElementById('saveSection'),
     
     loginLink: document.getElementById('loginLink'),
     logoutBtn: document.getElementById('logoutBtn'),
     userInfo: document.getElementById('userInfo'),
   },
 
-  // Initialize
+  /* Initialize */
   init() {
-    this.state.selectedPreset = this.presets[0];
-    this.state.imageURL = this.state.selectedPreset.url;
-    this.state.currentImageName = this.state.selectedPreset.title;
+    this.selectedPreset = this.presets[0];
+    this.imageURL = this.selectedPreset.url;
+    this.currentImageName = this.selectedPreset.title;
     
     this.buildPresets();
     this.attachEventListeners();
     this.checkAuthStatus();
-    
-    console.log('🎮 Puzzle game initialized');
   },
 
-  // Auth
+  /* Check Auth Status */
   checkAuthStatus() {
     const token = sessionStorage.getItem('userToken');
     const userData = sessionStorage.getItem('userData');
     
     if (token && userData) {
-      this.state.isLoggedIn = true;
+      this.isLoggedIn = true;
       const user = JSON.parse(userData);
       this.updateUserUI(user);
-      this.elements.authPrompt.style.display = 'none';
       this.elements.saveSection.style.display = 'block';
+      this.elements.authPrompt.style.display = 'none';
     } else {
-      this.state.isLoggedIn = false;
+      this.isLoggedIn = false;
       this.elements.userInfo.textContent = '';
       this.elements.loginLink.style.display = 'inline-block';
       this.elements.logoutBtn.style.display = 'none';
-      this.elements.authPrompt.style.display = 'block';
       this.elements.saveSection.style.display = 'none';
+      this.elements.authPrompt.style.display = 'block';
     }
   },
 
+  /* Update User UI */
   updateUserUI(user) {
-    this.elements.userInfo.textContent = `👤 ${user.fullName}`;
+    this.elements.userInfo.textContent = `Welcome, ${user.fullName}`;
     this.elements.loginLink.style.display = 'none';
     this.elements.logoutBtn.style.display = 'inline-block';
   },
 
-  logout() {
-    sessionStorage.removeItem('userToken');
-    sessionStorage.removeItem('userData');
-    this.state.isLoggedIn = false;
-    this.checkAuthStatus();
-    this.updateMessage('👋 Signed out');
-  },
-
-  // Build Presets
+  /* Build Preset Thumbnails */
   buildPresets() {
     this.presets.forEach(p => {
       const el = document.createElement('div');
@@ -129,82 +133,130 @@ const game = {
       el.dataset.id = p.id;
       el.innerHTML = `
         <img src="${p.url}" alt="${p.title}">
-        <div class="presetItem-name">${p.title}</div>
+        <div style="padding:6px;font-size:12px;text-align:center;">${p.title}</div>
       `;
       el.addEventListener('click', () => this.selectPreset(p, el));
       this.elements.presetList.appendChild(el);
     });
     
-    if (this.elements.presetList.firstChild) {
-      this.elements.presetList.firstChild.classList.add('selected');
-    }
+    if (this.elements.presetList.firstChild) this.elements.presetList.firstChild.classList.add('selected');
   },
 
+  /* Select Preset */
   selectPreset(preset, element) {
     document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
-    this.state.selectedPreset = preset;
-    this.state.imageURL = preset.url;
-    this.state.currentImageName = preset.title;
+    this.selectedPreset = preset;
+    this.imageURL = preset.url;
+    this.currentImageName = preset.title;
   },
 
-  // Event Listeners
+  /* Attach Event Listeners */
   attachEventListeners() {
-    // Setup
-    this.elements.setupCreate.addEventListener('click', () => this.createFromSetup());
+    /* Menu */
+    this.elements.menuToggleBtn.addEventListener('click', () => this.toggleMenu());
+    this.elements.menuClose.addEventListener('click', () => this.closeMenu());
+    this.elements.menuOverlay.addEventListener('click', (e) => {
+      if (e.target === this.elements.menuOverlay) this.closeMenu();
+    });
     
-    // Presets
+    /* Auth */
+    this.elements.loginLink.addEventListener('click', () => window.location.href = '../auth/index.html');
+    this.elements.logoutBtn.addEventListener('click', () => this.logout());
+    
+    /* Image Upload */
+    this.elements.imageUpload.addEventListener('change', (e) => this.handleQuickUpload(e));
+    this.elements.menuUpload.addEventListener('change', (e) => this.handleMenuUpload(e));
+    
+    /* Menu Controls */
     this.elements.presetSizes.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => this.selectSize(btn));
     });
     
-    // Upload
-    this.elements.menuUpload.addEventListener('change', (e) => this.handleMenuUpload(e));
+    this.elements.menuCreate.addEventListener('click', () => this.createPuzzleFromMenu());
+    this.elements.menuUseUploaded.addEventListener('click', () => this.useUploadedImage());
     
-    // Game Controls
-    this.elements.newPuzzleBtn.addEventListener('click', () => this.openSetup());
+    /* Puzzle Controls */
     this.elements.previewBtn.addEventListener('click', () => this.togglePreview());
-    this.elements.checkBtn.addEventListener('click', () => this.checkPositionsManual());
     this.elements.shuffleBtn.addEventListener('click', () => this.handleShuffle());
+    this.elements.enableCheckEl.addEventListener('change', () => this.handleCheckToggle());
     
-    // Auth
-    this.elements.loginLink.addEventListener('click', () => window.location.href = '../auth/index.html');
-    this.elements.logoutBtn.addEventListener('click', () => this.logout());
-    
-    // Completion
-    this.elements.resultNew.addEventListener('click', () => this.closeCompletion());
-    this.elements.resultClose.addEventListener('click', () => this.closeCompletion());
+    /* Completion Overlay */
+    this.elements.overlayShuffle.addEventListener('click', () => this.handleShuffle());
+    this.elements.overlayNew.addEventListener('click', () => this.openMenu());
+    this.elements.overlayClose.addEventListener('click', () => this.hideComplete());
+    this.elements.overlaySave.addEventListener('click', () => this.savePuzzleResult());
     this.elements.resultSignup.addEventListener('click', () => window.location.href = '../auth/index.html');
-    this.elements.resultSave.addEventListener('click', () => this.savePuzzleResult());
     
-    // Preview
-    this.elements.previewOverlay.addEventListener('click', () => this.closePreview());
-    
-    // Completion overlay - click outside to close
-    this.elements.completionOverlay.addEventListener('click', (e) => {
-      if (e.target === this.elements.completionOverlay) {
-        this.closeCompletion();
-      }
-    });
-
-    // Keyboard
+    /* Keyboard */
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        this.closePreview();
-        this.closeCompletion();
+        if (this.elements.menuOverlay.style.display === 'flex') this.closeMenu();
+        if (this.elements.overlayComplete.style.display === 'flex') this.hideComplete();
       }
+    });
+
+    /* Click outside completion modal to close */
+    this.elements.overlayComplete.addEventListener('click', (e) => {
+      if (e.target === this.elements.overlayComplete) this.hideComplete();
     });
   },
 
-  // Setup
-  openSetup() {
-    this.elements.setupOverlay.classList.add('active');
+  /* Auth Functions */
+  logout() {
+    sessionStorage.removeItem('userToken');
+    sessionStorage.removeItem('userData');
+    this.isLoggedIn = false;
+    this.checkAuthStatus();
+    this.updateMessage('You have been signed out');
   },
 
-  closeSetup() {
-    this.elements.setupOverlay.classList.remove('active');
+  /* Menu Functions */
+  toggleMenu() {
+    if (this.elements.menuOverlay.style.display === 'flex') {
+      this.closeMenu();
+    } else {
+      this.openMenu();
+    }
   },
 
+  openMenu() {
+    this.elements.menuOverlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  },
+
+  closeMenu() {
+    this.elements.menuOverlay.style.display = 'none';
+    document.body.style.overflow = '';
+  },
+
+  /* Upload Handlers */
+  handleQuickUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (this.uploadedURL) URL.revokeObjectURL(this.uploadedURL);
+    this.uploadedURL = URL.createObjectURL(file);
+    this.imageURL = this.uploadedURL;
+    this.currentImageName = file.name;
+    
+    this.updateMessage('A custom image has been uploaded. Open the menu and click "Create Puzzle."');
+  },
+
+  handleMenuUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (this.uploadedURL) URL.revokeObjectURL(this.uploadedURL);
+    this.uploadedURL = URL.createObjectURL(file);
+    this.imageURL = this.uploadedURL;
+    this.currentImageName = file.name;
+    
+    document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
+    this.selectedPreset = null;
+  },
+
+  /* Size Selection */
   selectSize(button) {
     this.elements.presetSizes.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     button.classList.add('active');
@@ -212,57 +264,58 @@ const game = {
     this.elements.menuRows.value = button.dataset.rows;
   },
 
-  handleMenuUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  /* Create Puzzle */
+  createPuzzleFromMenu() {
+    const cols = Math.max(1, Math.min(30, +this.elements.menuCols.value || 1));
+    const rows = Math.max(1, Math.min(30, +this.elements.menuRows.value || 1));
     
-    if (this.state.uploadedURL) URL.revokeObjectURL(this.state.uploadedURL);
-    this.state.uploadedURL = URL.createObjectURL(file);
-    this.state.imageURL = this.state.uploadedURL;
-    this.state.currentImageName = file.name;
-    
-    document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
-  },
-
-  createFromSetup() {
-    const cols = Math.max(1, Math.min(20, +this.elements.menuCols.value || 5));
-    const rows = Math.max(1, Math.min(20, +this.elements.menuRows.value || 6));
-    
-    if (!this.state.imageURL) {
-      alert('Please select or upload an image');
+    if (!this.imageURL) {
+      alert('Select or upload an image from the menu.');
       return;
     }
     
-    this.createPuzzle(this.state.imageURL, cols, rows);
-    this.closeSetup();
+    this.createPuzzle(this.imageURL, cols, rows);
+    this.closeMenu();
   },
 
-  // Create Puzzle
-  createPuzzle(imgSrc, cols, rows) {
-    this.state.cols = cols;
-    this.state.rows = rows;
+  useUploadedImage() {
+    if (!this.uploadedURL) {
+      alert('First, upload your image to the menu (file).');
+      return;
+    }
     
-    const canvasSize = Math.min(600, window.innerWidth - 40);
-    this.state.pieceWidth = Math.floor(canvasSize / cols);
-    this.state.pieceHeight = Math.floor(canvasSize / rows);
+    this.imageURL = this.uploadedURL;
+    this.selectedPreset = null;
+    document.querySelectorAll('.presetItem').forEach(el => el.classList.remove('selected'));
+    this.updateMessage('The uploaded image is used. Click "Create Puzzle."');
+  },
 
-    // Reset
+  /* Main Puzzle Creation */
+  createPuzzle(imgSrc, cols, rows) {
+    this.cols = cols;
+    this.rows = rows;
+    
+    const canvasSize = 500;
+    this.pieceWidth = Math.floor(canvasSize / cols);
+    this.pieceHeight = Math.floor(canvasSize / rows);
+
+    /* Reset state */
     this.elements.puzzle.innerHTML = '';
-    this.state.cells = [];
-    this.state.solvedAlready = false;
-    this.state.selectedPiece = null;
-    this.state.hintsUsed = 0;
+    this.cells = [];
+    this.pieceIdCounter = 0;
+    this.solvedAlready = false;
+    this.selectedPiece = null;
+    this.hintsUsed = 0;
     this.updateHintsDisplay();
-    this.updateGridSize();
 
-    // Setup grid
-    this.elements.puzzle.style.gridTemplateColumns = `repeat(${cols}, ${this.state.pieceWidth}px)`;
-    this.elements.puzzle.style.gridTemplateRows = `repeat(${rows}, ${this.state.pieceHeight}px)`;
+    /* Setup grid */
+    this.elements.puzzle.style.gridTemplateColumns = `repeat(${cols}, ${this.pieceWidth}px)`;
+    this.elements.puzzle.style.gridTemplateRows = `repeat(${rows}, ${this.pieceHeight}px)`;
 
-    // Create pieces
+    /* Create cells and pieces */
     for (let i = 0; i < cols * rows; i++) {
       const cell = this.createCell(i, imgSrc);
-      this.state.cells.push(cell);
+      this.cells.push(cell);
       this.elements.puzzle.appendChild(cell);
     }
 
@@ -271,51 +324,53 @@ const game = {
     this.resetTimer();
     this.elements.previewContainer.style.display = 'none';
     this.elements.previewPuzzle.innerHTML = '';
-    this.updateMessage('🎮 Drag pieces to solve the puzzle!');
+    this.updateMessage('The puzzle is complete. Start solving!');
   },
 
+  /* Create Single Cell */
   createCell(index, imgSrc) {
     const cell = document.createElement('div');
     cell.className = 'cell';
-    cell.style.width = this.state.pieceWidth + 'px';
-    cell.style.height = this.state.pieceHeight + 'px';
+    cell.style.width = this.pieceWidth + 'px';
+    cell.style.height = this.pieceHeight + 'px';
     cell.dataset.index = index;
 
-    cell.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      cell.classList.add('drop-target');
-    });
+    cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('drop-target'); });
     cell.addEventListener('dragleave', () => cell.classList.remove('drop-target'));
     cell.addEventListener('drop', (e) => this.onDropOnCell(e, cell));
 
+    /* Create piece */
     const piece = document.createElement('div');
     piece.className = 'piece';
     piece.draggable = true;
-    piece.id = 'piece-' + index;
+    piece.id = 'piece-' + (this.pieceIdCounter++);
 
-    const row = Math.floor(index / this.state.cols);
-    const col = index % this.state.cols;
+    const row = Math.floor(index / this.cols), col = index % this.cols;
     
     piece.style.backgroundImage = `url(${imgSrc})`;
-    piece.style.backgroundSize = `${this.state.cols * this.state.pieceWidth}px ${this.state.rows * this.state.pieceHeight}px`;
-    piece.style.backgroundPosition = `-${col * this.state.pieceWidth}px -${row * this.state.pieceHeight}px`;
+    piece.style.backgroundSize = `${this.cols * this.pieceWidth}px ${this.rows * this.pieceHeight}px`;
+    piece.style.backgroundPosition = `-${col * this.pieceWidth}px -${row * this.pieceHeight}px`;
     piece.dataset.correct = index;
 
-    piece.addEventListener('dragstart', (e) => {
+    /* Drag events */
+    piece.addEventListener('dragstart', e => {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', piece.id);
       piece.classList.add('dragging');
-      if (!this.state.started) this.startTimer();
+      if (!this.started) this.startTimer();
     });
     piece.addEventListener('dragend', () => {
       piece.classList.remove('dragging');
       document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
     });
-    piece.addEventListener('click', (e) => {
+
+    /* Click event */
+    piece.addEventListener('click', e => {
       e.stopPropagation();
       this.toggleSelect(piece);
     });
 
+    /* Touch events */
     piece.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
     piece.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
     piece.addEventListener('touchend', (e) => this.onTouchEnd(e));
@@ -324,6 +379,7 @@ const game = {
     return cell;
   },
 
+  /* Drop Handler */
   onDropOnCell(e, cell) {
     e.preventDefault();
     cell.classList.remove('drop-target');
@@ -340,51 +396,36 @@ const game = {
     cell.appendChild(dragged);
     dragged.classList.remove('selected', 'dragging');
 
-    this.checkPuzzleCompletion();
-  },
-
-  toggleSelect(piece) {
-    if (this.state.selectedPiece) {
-      this.state.selectedPiece.classList.remove('selected');
-    }
-    
-    if (this.state.selectedPiece === piece) {
-      this.state.selectedPiece = null;
-    } else {
-      this.state.selectedPiece = piece;
-      piece.classList.add('selected');
-    }
-    
-    if (!this.state.started && this.state.selectedPiece) {
-      this.startTimer();
-    }
-  },
-
-  checkPuzzleCompletion() {
-    if (this.state.solvedAlready) return;
-
-    if (this.isSolved()) {
+    if (this.elements.enableCheckEl.checked) {
+      this.checkPositions();
+    } else if (this.isSolved()) {
       this.finishPuzzle();
     }
   },
 
-  isSolved() {
-    if (!this.state.cells.length) return false;
+  /* Click Selection */
+  toggleSelect(piece) {
+    if (this.selectedPiece) this.selectedPiece.classList.remove('selected');
     
-    return this.state.cells.every((cell, index) => {
-      const piece = cell.firstChild;
-      return +piece.dataset.correct === index;
-    });
+    if (this.selectedPiece === piece) { 
+      this.selectedPiece = null; 
+    } else { 
+      this.selectedPiece = piece; 
+      piece.classList.add('selected'); 
+    }
+    
+    if (!this.started && this.selectedPiece) this.startTimer();
   },
 
-  checkPositionsManual() {
-    if (!this.state.cells.length) return;
+  /* Check Positions */
+  checkPositions() {
+    if (!this.cells.length || !this.elements.enableCheckEl.checked) return;
 
-    this.state.hintsUsed++;
+    this.hintsUsed++;
     this.updateHintsDisplay();
 
     let solved = true;
-    this.state.cells.forEach((cell, index) => {
+    this.cells.forEach((cell, index) => {
       const piece = cell.firstChild;
       if (+piece.dataset.correct === index) {
         piece.style.border = '2px solid var(--success)';
@@ -395,79 +436,100 @@ const game = {
     });
 
     if (solved) {
-      setTimeout(() => this.finishPuzzle(), 500);
+      this.finishPuzzle();
     }
   },
 
-  // Shuffle
+  /* Check if Solved */
+  isSolved() {
+    return this.cells.length && this.cells.every((cell, index) => 
+      +cell.firstChild.dataset.correct === index
+    );
+  },
+
+  /* Handle Check Toggle */
+  handleCheckToggle() {
+    if (this.elements.enableCheckEl.checked) {
+      this.hintsUsed++;
+      this.updateHintsDisplay();
+      this.checkPositions();
+      this.updateMessage('Position checking is enabled. Correct/incorrect tiles are highlighted.');
+    } else {
+      document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
+      this.updateMessage('Position checking is disabled.');
+    }
+  },
+
+  /* Update Hints Display */
+  updateHintsDisplay() {
+    this.elements.hintsCountDisplay.textContent = `Hints used: ${this.hintsUsed}`;
+  },
+
+  /* Shuffle */
   handleShuffle() {
+    this.hideComplete();
     this.shuffle();
     this.resetTimer();
-    this.state.solvedAlready = false;
-    this.state.hintsUsed = 0;
+    this.solvedAlready = false;
+    this.hintsUsed = 0;
     this.updateHintsDisplay();
-    this.updateMessage('🔀 Puzzle shuffled!');
+    this.updateMessage('The puzzle is shuffled');
   },
 
   shuffle() {
-    if (!this.state.cells.length) return;
+    if (!this.cells.length) return;
 
-    const pieces = this.state.cells.map(cell => cell.firstChild);
+    const pieces = this.cells.map(cell => cell.firstChild);
     
     for (let i = pieces.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
     }
 
-    this.state.cells.forEach((cell, index) => cell.appendChild(pieces[index]));
+    this.cells.forEach((cell, index) => cell.appendChild(pieces[index]));
     document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
   },
 
-  // Completion
+  /* Finish Puzzle */
   finishPuzzle() {
-    if (this.state.solvedAlready) return;
+    if (this.solvedAlready) return;
 
-    this.state.solvedAlready = true;
+    this.solvedAlready = true;
     this.stopTimer();
     
-    this.playCompletionAnimation();
-    this.showCompletion();
-  },
-
-  showCompletion() {
-    this.elements.resultTime.textContent = this.formatElapsedTime();
-    this.elements.resultHints.textContent = this.state.hintsUsed;
-    this.elements.resultDifficulty.textContent = this.getDifficulty();
-    this.elements.resultImageName.textContent = `📸 ${this.state.currentImageName}`;
+    this.updateMessage('The puzzle is complete! 🎉');
+    this.elements.overlayTime.textContent = `Time: ${this.formatElapsedTime()}`;
+    this.elements.overlayHints.textContent = `Hints used: ${this.hintsUsed}`;
+    this.elements.overlayImageName.textContent = `Image: ${this.currentImageName}`;
     
-    this.elements.completionOverlay.classList.add('active');
+    this.playCompletionAnimation();
+    this.showComplete();
   },
 
-  closeCompletion() {
-    this.elements.completionOverlay.classList.remove('active');
-    this.openSetup();
+  /* Show/Hide Complete */
+  showComplete() {
+    this.elements.overlayComplete.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
   },
 
-  getDifficulty() {
-    const total = this.state.cols * this.state.rows;
-    if (total <= 9) return '🟢 Easy';
-    if (total <= 30) return '🟡 Medium';
-    if (total <= 48) return '🔴 Hard';
-    return '⚫ Expert';
+  hideComplete() {
+    this.elements.overlayComplete.style.display = 'none';
+    document.body.style.overflow = '';
   },
 
+  /* Save Result */
   savePuzzleResult() {
-    if (!this.state.isLoggedIn) {
-      alert('Please sign in to save results');
+    if (!this.isLoggedIn) {
+      alert('Please sign in to save your result');
       return;
     }
 
     const userData = JSON.parse(sessionStorage.getItem('userData'));
     const result = {
-      imageName: this.state.currentImageName,
-      gridSize: `${this.state.cols}x${this.state.rows}`,
+      imageName: this.currentImageName,
+      gridSize: `${this.cols}x${this.rows}`,
       timeElapsed: this.formatElapsedTime(),
-      hintsUsed: this.state.hintsUsed,
+      hintsUsed: this.hintsUsed,
       userId: userData.id,
       date: new Date().toISOString()
     };
@@ -480,217 +542,152 @@ const game = {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        this.updateMessage('✅ Result saved!');
-        setTimeout(() => this.closeCompletion(), 1500);
+        this.updateMessage(`✓ Puzzle result saved!`);
+        setTimeout(() => this.hideComplete(), 1500);
+      } else {
+        alert('Error saving result');
       }
     })
-    .catch(err => console.error('Save error:', err));
+    .catch(err => {
+      console.error('Save error:', err);
+      alert('Error saving result');
+    });
   },
 
-  playCompletionAnimation() {
-    const celebMsg = document.createElement('div');
-    celebMsg.className = 'celebration-emoji';
-    celebMsg.textContent = '🎉';
-    celebMsg.style.left = '50%';
-    celebMsg.style.top = '50%';
-    document.body.appendChild(celebMsg);
-    
-    setTimeout(() => celebMsg.remove(), 800);
-    
-    this.createConfetti();
-    this.playSound();
-  },
-
-  createConfetti() {
-    const emojis = ['🎉', '🎊', '⭐', '✨', '🌟'];
-    for (let i = 0; i < 15; i++) {
-      setTimeout(() => {
-        const el = document.createElement('div');
-        el.className = 'celebration-emoji';
-        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-        
-        const x = Math.random() * window.innerWidth;
-        const tx = (Math.random() - 0.5) * 200;
-        
-        el.style.left = x + 'px';
-        el.style.top = '-50px';
-        el.style.setProperty('--tx', tx + 'px');
-        
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
-      }, i * 30);
-    }
-  },
-
-  playSound() {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const notes = [
-        { freq: 523.25, duration: 0.1 },
-        { freq: 659.25, duration: 0.1 },
-        { freq: 783.99, duration: 0.2 }
-      ];
-      
-      let currentTime = audioContext.currentTime;
-      notes.forEach(note => {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        
-        osc.frequency.value = note.freq;
-        gain.gain.setValueAtTime(0.3, currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, currentTime + note.duration);
-        
-        osc.start(currentTime);
-        osc.stop(currentTime + note.duration);
-        
-        currentTime += note.duration;
-      });
-    } catch (e) {
-      // Silent mode
-    }
-  },
-
-  // Preview
+  /* Preview */
   togglePreview() {
-    if (this.elements.previewOverlay.classList.contains('active')) {
-      this.closePreview();
-    } else {
-      this.renderFullPreview();
-      this.elements.previewOverlay.classList.add('active');
+    if (!this.imageURL) {
+      alert('Choose image from menu');
+      return;
     }
-  },
 
-  closePreview() {
-    this.elements.previewOverlay.classList.remove('active');
-  },
-
-  renderFullPreview() {
-    const canvasSize = Math.min(500, window.innerWidth - 60);
-    const pW = Math.floor(canvasSize / this.state.cols);
-    const pH = Math.floor(canvasSize / this.state.rows);
-
-    this.elements.fullPreviewPuzzle.innerHTML = '';
-    this.elements.fullPreviewPuzzle.style.gridTemplateColumns = `repeat(${this.state.cols}, ${pW}px)`;
-    this.elements.fullPreviewPuzzle.style.gridTemplateRows = `repeat(${this.state.rows}, ${pH}px)`;
-
-    for (let i = 0; i < this.state.cols * this.state.rows; i++) {
-      const row = Math.floor(i / this.state.cols);
-      const col = i % this.state.cols;
-
-      const preview = document.createElement('div');
-      preview.style.width = pW + 'px';
-      preview.style.height = pH + 'px';
-      preview.style.backgroundImage = `url(${this.state.imageURL})`;
-      preview.style.backgroundSize = `${this.state.cols * pW}px ${this.state.rows * pH}px`;
-      preview.style.backgroundPosition = `-${col * pW}px -${row * pH}px`;
-
-      this.elements.fullPreviewPuzzle.appendChild(preview);
+    if (this.elements.previewContainer.style.display === 'block') {
+      this.elements.previewContainer.style.display = 'none';
+      this.elements.previewBtn.textContent = 'Preview';
+      return;
     }
+
+    this.renderPreview();
+    this.elements.previewContainer.style.display = 'block';
+    this.elements.previewBtn.textContent = 'Hide image';
   },
 
-  // Timer
-  startTimer() {
-    if (this.state.started) return;
-
-    this.state.started = true;
-    this.state.startTime = performance.now();
+  renderPreview() {
+    const canvasSize = 500;
+    const pW = Math.floor(canvasSize / this.cols);
+    const pH = Math.floor(canvasSize / this.rows);
+    this.elements.previewPuzzle.innerHTML = '';
+    this.elements.previewPuzzle.style.gridTemplateColumns = `repeat(${this.cols}, ${pW}px)`;
+    this.elements.previewPuzzle.style.gridTemplateRows = `repeat(${this.rows}, ${pH}px)`;
     
-    this.state.timer = setInterval(() => {
-      const elapsed = performance.now() - this.state.startTime;
-      this.elements.timer.textContent = this.formatTime(elapsed);
+    for (let i = 0; i < this.cols * this.rows; i++) {
+      const row = Math.floor(i / this.cols), col = i % this.cols;
+      const pp = document.createElement('div');
+      pp.style.width = pW + 'px';
+      pp.style.height = pH + 'px';
+      pp.style.backgroundImage = `url(${this.imageURL})`;
+      pp.style.backgroundSize = `${this.cols * pW}px ${this.rows * pH}px`;
+      pp.style.backgroundPosition = `-${col * pW}px -${row * pH}px`;
+      this.elements.previewPuzzle.appendChild(pp);
+    }
+  },
+
+  /* Timer */
+  startTimer() {
+    if (this.started) return;
+
+    this.started = true;
+    this.startTime = performance.now();
+    
+    this.timer = setInterval(() => {
+      const elapsed = performance.now() - this.startTime;
+      const ms = Math.floor(elapsed % 1000).toString().padStart(3, '0');
+      const sec = Math.floor(elapsed / 1000) % 60;
+      const min = Math.floor(elapsed / 60000);
+      
+      this.timerDisplay.textContent = `Time: ${min}:${sec.toString().padStart(2, '0')}:${ms}`;
     }, 50);
   },
 
-  stopTimer() {
-    clearInterval(this.state.timer);
-  },
+  stopTimer() { clearInterval(this.timer); }
 
   resetTimer() {
-    clearInterval(this.state.timer);
-    this.state.started = false;
-    this.state.startTime = null;
-    this.elements.timer.textContent = '0:00:000';
-  },
-
-  formatTime(ms) {
-    const sec = Math.floor(ms / 1000);
-    const min = Math.floor(sec / 60);
-    const secs = sec % 60;
-    const ms_disp = Math.floor(ms % 1000);
-    
-    return `${min}:${secs.toString().padStart(2, '0')}:${ms_disp.toString().padStart(3, '0')}`;
+    clearInterval(this.timer);
+    this.started = false;
+    this.startTime = null;
+    this.elements.timerDisplay.textContent = 'Time: 0:00:000';
   },
 
   formatElapsedTime() {
-    if (!this.state.startTime) return '0:00:000';
-    const elapsed = performance.now() - this.state.startTime;
-    return this.formatTime(elapsed);
+    if (!this.startTime) return '0:00:000';
+    const elapsed = performance.now() - this.startTime;
+    const ms = Math.floor(elapsed % 1000).toString().padStart(3, '0');
+    const sec = Math.floor(elapsed / 1000) % 60;
+    const min = Math.floor(elapsed / 60000);
+    return `${min}:${sec.toString().padStart(2, '0')}:${ms}`;
   },
 
-  updateHintsDisplay() {
-    this.elements.hintsCount.textContent = this.state.hintsUsed;
-  },
+  /* Touch Support */
+  touchDrag: { piece: null, srcCell: null, currentTargetCell: null },
 
-  updateGridSize() {
-    this.elements.gridSize.textContent = `${this.state.cols}×${this.state.rows}`;
-  },
-
-  updateMessage(text) {
-    this.elements.message.textContent = text;
-  },
-
-  // Touch Support
   onTouchStart(e) {
     e.preventDefault();
     const piece = e.currentTarget;
-    this.state.touchDrag.piece = piece;
-    this.state.touchDrag.srcCell = piece.parentElement;
+    this.touchDrag.piece = piece;
+    this.touchDrag.srcCell = piece.parentElement;
     piece.classList.add('dragging');
-    if (!this.state.started) this.startTimer();
+    if (!this.started) this.startTimer();
   },
 
   onTouchMove(e) {
-    if (!this.state.touchDrag.piece) return;
+    if (!this.touchDrag.piece) return;
     e.preventDefault();
 
     const touch = e.changedTouches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     const cell = el ? el.closest('.cell') : null;
 
-    if (cell !== this.state.touchDrag.currentTargetCell) {
-      if (this.state.touchDrag.currentTargetCell) {
-        this.state.touchDrag.currentTargetCell.classList.remove('drop-target');
+    if (cell !== this.touchDrag.currentTargetCell) {
+      if (this.touchDrag.currentTargetCell) {
+        this.touchDrag.currentTargetCell.classList.remove('drop-target');
       }
-      this.state.touchDrag.currentTargetCell = cell;
+      this.touchDrag.currentTargetCell = cell;
       if (cell) cell.classList.add('drop-target');
     }
   },
 
   onTouchEnd(e) {
-    if (!this.state.touchDrag.piece) return;
+    if (!this.touchDrag.piece) return;
 
-    const piece = this.state.touchDrag.piece;
-    const targetCell = this.state.touchDrag.currentTargetCell;
+    const piece = this.touchDrag.piece;
+    const targetCell = this.touchDrag.currentTargetCell;
 
     piece.classList.remove('dragging');
 
-    if (targetCell && targetCell !== this.state.touchDrag.srcCell) {
+    if (targetCell && targetCell !== this.touchDrag.srcCell) {
       const targetPiece = targetCell.firstChild;
-      const srcCell = this.state.touchDrag.srcCell;
+      const srcCell = this.touchDrag.srcCell;
       srcCell.appendChild(targetPiece);
       targetCell.appendChild(piece);
-      this.checkPuzzleCompletion();
+
+      if (this.elements.enableCheckEl.checked) {
+        this.checkPositions();
+      } else if (this.isSolved()) {
+        this.finishPuzzle();
+      }
     }
 
     document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
-    this.state.touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
+    this.touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
+  },
+
+  /* Utility */
+  updateMessage(text) {
+    this.elements.message.textContent = text;
   }
 };
 
-// Initialize
+/* Initialize puzzle */
 document.addEventListener('DOMContentLoaded', () => {
-  game.init();
+  puzzleModule.init();
 });
