@@ -419,34 +419,35 @@ const puzzleModule = {
     }
   },
 
-  /* Cell Click Exchange - REMOVED BUGGY CODE */
-  /* The puzzle is now controlled only by drag-drop and check positions */
+  /* Check if Solved - RETURNS TRUE ONLY IF ALL CORRECT */
+  isSolved() {
+    if (!this.cells.length) return false;
+    
+    return this.cells.every((cell, index) => {
+      const piece = cell.firstChild;
+      return +piece.dataset.correct === index;
+    });
+  },
 
-  /* Check Positions */
+  /* Check Positions With Visual Feedback */
   checkPositions() {
     if (!this.cells.length) return;
 
-    let solved = true;
+    let allCorrect = true;
     this.cells.forEach((cell, index) => {
       const piece = cell.firstChild;
       if (+piece.dataset.correct === index) {
         piece.style.border = '2px solid var(--success)';
       } else {
         piece.style.border = '2px solid var(--error)';
-        solved = false;
+        allCorrect = false;
       }
     });
 
-    if (solved) {
-      this.finishPuzzle();
+    /* If all correct, finish puzzle */
+    if (allCorrect) {
+      setTimeout(() => this.finishPuzzle(), 500);
     }
-  },
-
-  /* Check if Solved Without Visual Feedback */
-  isSolved() {
-    return this.cells.length && this.cells.every((cell, index) => 
-      +cell.firstChild.dataset.correct === index
-    );
   },
 
   /* Main Check Function After Every Move */
@@ -454,12 +455,13 @@ const puzzleModule = {
     if (this.solvedAlready) return;
 
     if (this.elements.enableCheckEl.checked) {
-      /* Visual check mode */
+      /* Visual check mode - show green/red borders */
       this.hintsUsed++;
       this.updateHintsDisplay();
       this.checkPositions();
+      this.updateMessage('🔍 Checking positions...');
     } else {
-      /* Silent mode - only check if fully solved */
+      /* Silent mode - only notify when fully solved */
       if (this.isSolved()) {
         this.finishPuzzle();
       }
@@ -472,16 +474,16 @@ const puzzleModule = {
       this.hintsUsed++;
       this.updateHintsDisplay();
       this.checkPositions();
-      this.updateMessage('✓ Position checking enabled. Correct/incorrect tiles highlighted.');
+      this.updateMessage('✓ Position checking enabled. Correct tiles = green, Incorrect = red.');
     } else {
       document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
-      this.updateMessage('✗ Position checking disabled. Puzzle will complete when fully solved.');
+      this.updateMessage('✗ Position checking disabled. You will see result when puzzle is complete.');
     }
   },
 
   /* Update Hints Display */
   updateHintsDisplay() {
-    this.elements.hintsCountDisplay.textContent = `Hints used: ${this.hintsUsed}`;
+    this.elements.hintsCountDisplay.textContent = `💡 Hints used: ${this.hintsUsed}`;
   },
 
   /* Shuffle */
@@ -510,19 +512,67 @@ const puzzleModule = {
     document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
   },
 
-  /* Finish Puzzle - ONLY WHEN FULLY SOLVED */
+  /* Finish Puzzle - CALLED ONLY WHEN FULLY SOLVED */
   finishPuzzle() {
     if (this.solvedAlready) return;
 
     this.solvedAlready = true;
     this.stopTimer();
     
-    this.updateMessage('🎉 The puzzle is complete!');
+    /* Update overlay with final data */
     this.elements.overlayTime.textContent = `⏱️ Time: ${this.formatElapsedTime()}`;
     this.elements.overlayHints.textContent = `💡 Hints used: ${this.hintsUsed}`;
     this.elements.overlayImageName.textContent = `📸 Image: ${this.currentImageName}`;
     
+    /* Show confetti or animation effect */
+    this.playCompletionAnimation();
+    
     this.showComplete();
+  },
+
+  /* Play Completion Animation */
+  playCompletionAnimation() {
+    /* Add visual celebration effect */
+    const celebrationMessage = document.createElement('div');
+    celebrationMessage.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 4rem;
+      font-weight: bold;
+      z-index: 2001;
+      animation: bounce 0.6s ease-in-out;
+      pointer-events: none;
+    `;
+    celebrationMessage.textContent = '🎉';
+    document.body.appendChild(celebrationMessage);
+    
+    setTimeout(() => celebrationMessage.remove(), 600);
+    
+    /* Play sound if possible */
+    this.playCompletionSound();
+  },
+
+  /* Play Completion Sound */
+  playCompletionSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = 800;
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+      /* Audio API not available */
+    }
   },
 
   /* Show/Hide Complete */
@@ -713,13 +763,20 @@ const puzzleModule = {
   }
 };
 
+/* Add CSS for animation */
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes bounce {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+  }
+`;
+document.head.appendChild(style);
+
 /* Initialize puzzle */
 document.addEventListener('DOMContentLoaded', () => {
   puzzleModule.init();
 });
-
-
-
 
 
 
