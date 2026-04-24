@@ -7,16 +7,15 @@ const presets = [
 ];
 
 // ===== DOM ELEMENTS =====
-const menuToggleBtn = document.getElementById('menuToggleBtn');
-const menuOverlay = document.getElementById('menuOverlay');
+const setupOverlay = document.getElementById('setupOverlay');
 const presetList = document.getElementById('presetList');
 const presetSizes = document.getElementById('presetSizes');
-const menuCols = document.getElementById('menuCols');
-const menuRows = document.getElementById('menuRows');
-const menuCreate = document.getElementById('menuCreate');
-const menuUseUploaded = document.getElementById('menuUseUploaded');
-const menuClose = document.getElementById('menuClose');
-const menuUpload = document.getElementById('menuUpload');
+const setupCols = document.getElementById('setupCols');
+const setupRows = document.getElementById('setupRows');
+const setupCreate = document.getElementById('setupCreate');
+const setupUpload = document.getElementById('setupUpload');
+const setupSignup = document.getElementById('setupSignup');
+const authMessage = document.getElementById('authMessage');
 
 const imageUpload = document.getElementById('imageUpload');
 const previewBtn = document.getElementById('previewBtn');
@@ -28,16 +27,24 @@ const previewPuzzle = document.getElementById('previewPuzzle');
 const message = document.getElementById('message');
 const timerDisplay = document.getElementById('timer');
 
-const overlayComplete = document.getElementById('overlayComplete');
-const overlayTime = document.getElementById('overlayTime');
-const overlayShuffle = document.getElementById('overlayShuffle');
-const overlayNew = document.getElementById('overlayNew');
-const overlayClose = document.getElementById('overlayClose');
+const completionOverlay = document.getElementById('completionOverlay');
+const completionTime = document.getElementById('completionTime');
+const completionNew = document.getElementById('completionNew');
+const completionShuffle = document.getElementById('completionShuffle');
+const completionClose = document.getElementById('completionClose');
+const completionSignup = document.getElementById('completionSignup');
+const completionSave = document.getElementById('completionSave');
+const savePrompt = document.getElementById('savePrompt');
+const saveSection = document.getElementById('saveSection');
+
+const userInfo = document.getElementById('userInfo');
+const logoutBtn = document.getElementById('logoutBtn');
 
 // ===== STATE =====
 let selectedPreset = presets[0];
 let uploadedURL = '';
 let imageURL = selectedPreset.url;
+let currentImageName = selectedPreset.title;
 let cols = 5, rows = 6;
 let pieceWidth = 100, pieceHeight = 100;
 let cells = [];
@@ -47,11 +54,54 @@ let timer = null;
 let pieceIdCounter = 0;
 let solvedAlready = false;
 let selectedPiece = null;
+let isLoggedIn = false;
+
+// ===== CHECK AUTH =====
+function checkAuthStatus() {
+  const token = sessionStorage.getItem('userToken');
+  const userData = sessionStorage.getItem('userData');
+  
+  if (token && userData) {
+    isLoggedIn = true;
+    const user = JSON.parse(userData);
+    userInfo.textContent = `👤 ${user.fullName}`;
+    userInfo.style.display = 'block';
+    logoutBtn.style.display = 'inline-flex';
+    savePrompt.style.display = 'none';
+    saveSection.style.display = 'block';
+    setupSignup.style.display = 'none';
+    authMessage.style.display = 'none';
+  } else {
+    isLoggedIn = false;
+    userInfo.style.display = 'none';
+    logoutBtn.style.display = 'none';
+    savePrompt.style.display = 'block';
+    saveSection.style.display = 'none';
+    setupSignup.style.display = 'inline-flex';
+    authMessage.style.display = 'block';
+  }
+}
+
+logoutBtn.addEventListener('click', () => {
+  sessionStorage.removeItem('userToken');
+  sessionStorage.removeItem('userData');
+  isLoggedIn = false;
+  checkAuthStatus();
+  message.textContent = '👋 You have been signed out';
+});
+
+setupSignup.addEventListener('click', () => {
+  window.location.href = '../auth/index.html';
+});
+
+completionSignup.addEventListener('click', () => {
+  window.location.href = '../auth/index.html';
+});
 
 // ===== BUILD PRESETS =====
 presets.forEach(p => {
   const el = document.createElement('div');
-  el.className = 'presetItem';
+  el.className = 'presetItem selected';
   el.dataset.id = p.id;
   el.innerHTML = `<img src="${p.url}" alt="${p.title}"><div>${p.title}</div>`;
   el.addEventListener('click', () => {
@@ -59,88 +109,55 @@ presets.forEach(p => {
     el.classList.add('selected');
     selectedPreset = p;
     imageURL = p.url;
+    currentImageName = p.title;
   });
   presetList.appendChild(el);
 });
-if (presetList.firstChild) presetList.firstChild.classList.add('selected');
 
-// ===== MENU TOGGLE =====
-function openMenu() {
-  menuOverlay.style.display = 'flex';
-  menuOverlay.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeMenu() {
-  menuOverlay.style.display = 'none';
-  menuOverlay.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
-}
-
-menuToggleBtn.addEventListener('click', () => {
-  if (menuOverlay.style.display === 'flex') closeMenu();
-  else openMenu();
+// ===== SIZE BUTTONS =====
+presetSizes.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    presetSizes.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    setupCols.value = btn.dataset.cols;
+    setupRows.value = btn.dataset.rows;
+  });
 });
 
-menuClose.addEventListener('click', closeMenu);
-menuOverlay.addEventListener('click', (e) => {
-  if (e.target === menuOverlay) closeMenu();
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    if (menuOverlay.style.display === 'flex') closeMenu();
-    if (overlayComplete.style.display === 'flex') hideComplete();
-  }
-});
-
-// ===== MENU UPLOAD =====
-menuUpload.addEventListener('change', e => {
+// ===== UPLOAD =====
+setupUpload.addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   if (uploadedURL) URL.revokeObjectURL(uploadedURL);
   uploadedURL = URL.createObjectURL(f);
   imageURL = uploadedURL;
+  currentImageName = f.name;
   document.querySelectorAll('.presetItem').forEach(i => i.classList.remove('selected'));
-  selectedPreset = null;
 });
 
-// ===== QUICK UPLOAD =====
 imageUpload.addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   if (uploadedURL) URL.revokeObjectURL(uploadedURL);
   uploadedURL = URL.createObjectURL(f);
   imageURL = uploadedURL;
-  message.textContent = '✅ Custom image uploaded. Open the menu and click "Start Puzzle."';
-});
-
-// ===== PRESET SIZES =====
-presetSizes.querySelectorAll('button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    presetSizes.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    menuCols.value = btn.dataset.cols;
-    menuRows.value = btn.dataset.rows;
-  });
-});
-
-// ===== USE UPLOADED =====
-menuUseUploaded.addEventListener('click', () => {
-  if (!uploadedURL) return alert('First, upload your image to the menu.');
-  imageURL = uploadedURL;
-  selectedPreset = null;
-  document.querySelectorAll('.presetItem').forEach(i => i.classList.remove('selected'));
-  message.textContent = '✅ Uploaded image is ready. Click "Start Puzzle."';
+  currentImageName = f.name;
+  message.textContent = '✅ Custom image uploaded!';
 });
 
 // ===== CREATE PUZZLE =====
-menuCreate.addEventListener('click', () => {
-  const c = Math.max(1, Math.min(30, +menuCols.value || 1));
-  const r = Math.max(1, Math.min(30, +menuRows.value || 1));
-  if (!imageURL) return alert('Select or upload an image from the menu.');
+setupCreate.addEventListener('click', () => {
+  const c = Math.max(1, Math.min(30, +setupCols.value || 5));
+  const r = Math.max(1, Math.min(30, +setupRows.value || 6));
+  
+  if (!imageURL) {
+    alert('Please select or upload an image');
+    return;
+  }
+  
   createPuzzle(imageURL, c, r);
-  closeMenu();
+  setupOverlay.classList.remove('active');
+  document.body.style.overflow = '';
 });
 
 function createPuzzle(imgSrc, c, r) {
@@ -176,7 +193,7 @@ function createPuzzle(imgSrc, c, r) {
     piece.id = 'piece-' + (pieceIdCounter++);
 
     const rr = Math.floor(i / cols), cc = i % cols;
-    piece.style.backgroundImage = `url(${imgSrc})`;
+    piece.style.backgroundImage = `url('${imgSrc}')`;
     piece.style.backgroundSize = `${cols * pieceWidth}px ${rows * pieceHeight}px`;
     piece.style.backgroundPosition = `-${cc * pieceWidth}px -${rr * pieceHeight}px`;
     piece.dataset.correct = i;
@@ -206,16 +223,15 @@ function createPuzzle(imgSrc, c, r) {
   resetTimer();
   previewContainer.style.display = 'none';
   previewPuzzle.innerHTML = '';
-  message.textContent = '🎮 The puzzle is ready. Start solving!';
+  message.textContent = '🎮 Puzzle ready! Start solving!';
 }
 
 // ===== SHUFFLE =====
 shuffleBtn.addEventListener('click', () => {
   shuffle();
   solvedAlready = false;
-  hideComplete();
   resetTimer();
-  message.textContent = '🔀 The puzzle is shuffled!';
+  message.textContent = '🔀 Puzzle shuffled!';
 });
 
 function shuffle() {
@@ -294,10 +310,10 @@ function isSolved() {
 enableCheckEl.addEventListener('change', () => {
   if (enableCheckEl.checked) {
     checkPositions();
-    message.textContent = '✓ Position checking enabled. Green = correct, Red = wrong.';
+    message.textContent = '✓ Position checking ON - Green = correct, Red = wrong';
   } else {
     document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
-    message.textContent = '✗ Position checking disabled. Puzzle solves when all tiles are correct.';
+    message.textContent = '✗ Position checking OFF - Puzzle solves when all tiles are correct';
   }
 });
 
@@ -307,36 +323,65 @@ function finishPuzzle() {
   solvedAlready = true;
   stopTimer();
   message.textContent = '🎉 Puzzle complete!';
-  overlayTime.textContent = `⏱️ Time: ${formatElapsedTime()}`;
-  showComplete();
+  completionTime.textContent = `⏱️ Time: ${formatElapsedTime()}`;
+  showCompletion();
 }
 
-function showComplete() {
-  overlayComplete.style.display = 'flex';
-  overlayComplete.setAttribute('aria-hidden', 'false');
+function showCompletion() {
+  completionOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
-function hideComplete() {
-  overlayComplete.style.display = 'none';
-  overlayComplete.setAttribute('aria-hidden', 'true');
+function hideCompletion() {
+  completionOverlay.classList.remove('active');
   document.body.style.overflow = '';
 }
 
-overlayShuffle.addEventListener('click', () => {
-  hideComplete();
+completionNew.addEventListener('click', () => {
+  hideCompletion();
+  setupOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+});
+
+completionShuffle.addEventListener('click', () => {
+  hideCompletion();
   shuffle();
-  resetTimer();
   solvedAlready = false;
-  message.textContent = '🔀 The puzzle is shuffled!';
+  resetTimer();
+  message.textContent = '🔀 Puzzle shuffled!';
 });
 
-overlayNew.addEventListener('click', () => {
-  hideComplete();
-  openMenu();
-});
+completionClose.addEventListener('click', hideCompletion);
 
-overlayClose.addEventListener('click', hideComplete);
+completionSave.addEventListener('click', () => {
+  if (!isLoggedIn) {
+    alert('Please sign in to save results');
+    return;
+  }
+
+  const userData = JSON.parse(sessionStorage.getItem('userData'));
+  const result = {
+    imageName: currentImageName,
+    gridSize: `${cols}x${rows}`,
+    timeElapsed: formatElapsedTime(),
+    userId: userData.id,
+    date: new Date().toISOString()
+  };
+
+  fetch('../auth/save-result.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(result)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      message.textContent = '✅ Result saved!';
+      hideCompletion();
+    }
+  })
+  .catch(err => console.error('Save error:', err));
+});
 
 // ===== TIMER =====
 function startTimer() {
@@ -377,7 +422,6 @@ previewBtn.addEventListener('click', () => {
   if (!imageURL) return alert('Choose image from menu');
   if (previewContainer.style.display === 'block') {
     previewContainer.style.display = 'none';
-    previewContainer.setAttribute('aria-hidden', 'true');
     previewBtn.textContent = '👁️ Preview';
     return;
   }
@@ -392,13 +436,12 @@ previewBtn.addEventListener('click', () => {
     const pp = document.createElement('div');
     pp.style.width = pW + 'px';
     pp.style.height = pH + 'px';
-    pp.style.backgroundImage = `url(${imageURL})`;
+    pp.style.backgroundImage = `url('${imageURL}')`;
     pp.style.backgroundSize = `${cols * pW}px ${rows * pH}px`;
     pp.style.backgroundPosition = `-${c * pW}px -${r * pH}px`;
     previewPuzzle.appendChild(pp);
   }
   previewContainer.style.display = 'block';
-  previewContainer.setAttribute('aria-hidden', 'false');
   previewBtn.textContent = '✕ Hide';
 });
 
@@ -445,4 +488,4 @@ function onTouchEnd(e) {
 }
 
 // ===== INIT =====
-message.textContent = 'Click "Menu" to select an image and size. "Check positions" can be toggled on/off.';
+checkAuthStatus();
