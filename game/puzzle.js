@@ -60,7 +60,7 @@ let isLoggedIn = false;
 function checkAuthStatus() {
   const token = sessionStorage.getItem('userToken');
   const userData = sessionStorage.getItem('userData');
-  
+
   if (token && userData) {
     isLoggedIn = true;
     const user = JSON.parse(userData);
@@ -149,17 +149,18 @@ imageUpload.addEventListener('change', e => {
 setupCreate.addEventListener('click', () => {
   const c = Math.max(1, Math.min(30, +setupCols.value || 5));
   const r = Math.max(1, Math.min(30, +setupRows.value || 6));
-  
+
   if (!imageURL) {
     alert('Please select or upload an image');
     return;
   }
-  
-  createPuzzle(imageURL, c, r);
+
   setupOverlay.classList.remove('active');
   document.body.style.overflow = '';
+  createPuzzle(imageURL, c, r);
 });
 
+// ===== FIX 1: ждём загрузки изображения перед созданием тайлов =====
 function createPuzzle(imgSrc, c, r) {
   cols = c;
   rows = r;
@@ -172,7 +173,19 @@ function createPuzzle(imgSrc, c, r) {
   pieceIdCounter = 0;
   solvedAlready = false;
   selectedPiece = null;
+  shuffleBtn.disabled = true;
+  message.textContent = '⏳ Loading image...';
 
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => buildPuzzle(imgSrc);
+  img.onerror = () => {
+    message.textContent = '❌ Failed to load image. Try another.';
+  };
+  img.src = imgSrc;
+}
+
+function buildPuzzle(imgSrc) {
   puzzle.style.gridTemplateColumns = `repeat(${cols}, ${pieceWidth}px)`;
   puzzle.style.gridTemplateRows = `repeat(${rows}, ${pieceHeight}px)`;
 
@@ -486,6 +499,18 @@ function onTouchEnd(e) {
   document.querySelectorAll('.cell.drop-target').forEach(el => el.classList.remove('drop-target'));
   touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
 }
+
+// ===== FIX 2: закрытие оверлеев кликом по фону =====
+setupOverlay.addEventListener('click', (e) => {
+  if (e.target === setupOverlay) {
+    setupOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+});
+
+completionOverlay.addEventListener('click', (e) => {
+  if (e.target === completionOverlay) hideCompletion();
+});
 
 // ===== INIT =====
 checkAuthStatus();
