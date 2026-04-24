@@ -12,3 +12,6 @@
 | 8 | Laika uzskaites, restartēšanas un oriģinālā attēla apskates funkciju ieviešana | 
 | 9 | Value B  |
 |10 | Uzlabojumi, akcepttestēšana un vienību testēšana vai integrāciju testēšana | 
+
+
+Saite: https://veronika0408007.github.io/puzle/game/
