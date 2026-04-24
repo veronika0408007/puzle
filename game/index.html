@@ -12,7 +12,8 @@
   <div class="header-container">
     <h1>🧩 Online Puzzle</h1>
     <div id="topControls">
-      <button id="menuToggleBtn" class="btn btn-primary">☰ Menu</button>
+      <span id="userInfo"></span>
+      <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Sign out</button>
       <button id="previewBtn" class="btn btn-secondary">👁️ Preview</button>
       <button id="shuffleBtn" class="btn btn-secondary" disabled>🔀 Shuffle</button>
     </div>
@@ -41,7 +42,7 @@
 
     <div class="game-info">
       <div id="message" class="message" aria-live="polite">
-        Click "Menu" at the top to select an image and size.
+        Loading...
       </div>
       <div class="timer-section">
         <h3 id="timer" class="timer">⏱️ Time: 0:00:000</h3>
@@ -50,38 +51,28 @@
   </div>
 </main>
 
-<!-- Completion Overlay -->
-<div id="overlayComplete" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modal modal-completion">
-    <div class="completion-header">
-      <h2>🎉 Puzzle Complete!</h2>
-      <p id="overlayTime" class="completion-time">Time: 0:00:000</p>
+<!-- Setup Overlay (appears on load) -->
+<div id="setupOverlay" class="overlay setup-overlay active" role="dialog" aria-modal="true" aria-hidden="false">
+  <div class="modal modal-setup">
+    <div class="setup-header">
+      <h2>🎮 Create Your Puzzle</h2>
+      <p>Choose an image and difficulty to start playing</p>
     </div>
-    <div class="completion-actions">
-      <button id="overlayShuffle" class="btn btn-secondary">🔀 Shuffle Again</button>
-      <button id="overlayNew" class="btn btn-primary">➕ New Puzzle</button>
-      <button id="overlayClose" class="btn btn-ghost">Close</button>
-    </div>
-  </div>
-</div>
 
-<!-- Menu Overlay -->
-<div id="menuOverlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="modal modal-menu">
-    <div class="menu-content">
-      <div class="menu-section">
-        <h3>📸 Choose Image</h3>
+    <div class="setup-content">
+      <div class="setup-section">
+        <h3>📸 Select Image</h3>
         <div id="presetList" class="preset-list"></div>
         <div class="upload-area">
-          <label for="menuUpload" class="upload-label">
+          <label for="setupUpload" class="upload-label">
             📁 Upload Your Image
           </label>
-          <input type="file" id="menuUpload" accept="image/*" style="display:none;">
+          <input type="file" id="setupUpload" accept="image/*" style="display:none;">
         </div>
       </div>
 
-      <div class="menu-section">
-        <h3>📏 Choose Size</h3>
+      <div class="setup-section">
+        <h3>📏 Select Size</h3>
         <div class="presetSizes" id="presetSizes">
           <button data-cols="3" data-rows="3" class="size-btn">
             <span class="size-label">3×3</span>
@@ -104,18 +95,49 @@
         <div class="custom-size">
           <label>Custom Size:</label>
           <div class="custom-inputs">
-            <input type="number" id="menuCols" min="1" max="30" value="5">
+            <input type="number" id="setupCols" min="1" max="30" value="5">
             <span>×</span>
-            <input type="number" id="menuRows" min="1" max="30" value="6">
+            <input type="number" id="setupRows" min="1" max="30" value="6">
           </div>
         </div>
-
-        <div class="menu-actions">
-          <button id="menuCreate" class="btn btn-primary">🚀 Start Puzzle</button>
-          <button id="menuUseUploaded" class="btn btn-secondary">Use Uploaded</button>
-          <button id="menuClose" class="btn btn-ghost">Close</button>
-        </div>
       </div>
+    </div>
+
+    <div class="setup-actions">
+      <button id="setupCreate" class="btn btn-primary">🚀 Start Puzzle</button>
+    </div>
+
+    <div class="setup-auth">
+      <p id="authMessage" style="display:none;">📌 <strong>Sign up to save your results!</strong></p>
+      <button id="setupSignup" class="btn btn-secondary" style="display:none;">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Completion Overlay -->
+<div id="completionOverlay" class="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal modal-completion">
+    <div class="completion-celebration">
+      🎉
+    </div>
+    <div class="completion-header">
+      <h2>Puzzle Complete!</h2>
+      <p id="completionTime" class="completion-time">⏱️ Time: 0:00:000</p>
+    </div>
+
+    <div id="savePrompt" style="display:none;" class="save-prompt">
+      <p>📌 Sign up to save your puzzle results and track progress!</p>
+      <button id="completionSignup" class="btn btn-primary">Create Account</button>
+    </div>
+
+    <div id="saveSection" style="display:none;" class="save-section">
+      <button id="completionSave" class="btn btn-success">💾 Save Result</button>
+    </div>
+
+    <div class="completion-actions">
+      <button id="completionNew" class="btn btn-primary">➕ New Puzzle</button>
+      <button id="completionShuffle" class="btn btn-secondary">🔀 Shuffle</button>
+      <button id="completionClose" class="btn btn-ghost">Close</button>
     </div>
   </div>
 </div>
