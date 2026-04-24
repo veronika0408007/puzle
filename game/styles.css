@@ -78,6 +78,14 @@ header h1 {
   align-items: center;
 }
 
+#userInfo {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-right: 1rem;
+  padding-right: 1rem;
+  border-right: 2px solid var(--border-color);
+}
+
 /* ===== BUTTONS ===== */
 .btn {
   padding: 0.75rem 1.25rem;
@@ -121,6 +129,16 @@ header h1 {
 .btn-secondary:hover {
   background: var(--bg-light);
   border-color: var(--primary);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, var(--success), #45a049);
+  color: #fff;
+  border-color: #388e3c;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #45a049, #2e7d32);
 }
 
 .btn-ghost {
@@ -353,51 +371,47 @@ main {
   animation: slideUp 0.3s ease;
 }
 
+.setup-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-setup {
+  width: 900px;
+}
+
 .modal-completion {
   width: 450px;
-}
-
-.modal-menu {
-  width: 800px;
-}
-
-.completion-header {
   text-align: center;
+}
+
+/* ===== SETUP MODAL ===== */
+.setup-header {
   margin-bottom: 2rem;
+  text-align: center;
 }
 
-.completion-header h2 {
+.setup-header h2 {
   font-size: 2rem;
-  color: var(--success);
   margin-bottom: 0.5rem;
-  animation: pulse 0.6s ease-in-out;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.completion-time {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--primary);
+.setup-header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
-.completion-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.completion-actions .btn {
-  width: 100%;
-  justify-content: center;
-}
-
-/* ===== MENU ===== */
-.menu-content {
+.setup-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2.5rem;
+  margin-bottom: 2rem;
 }
 
-.menu-section h3 {
+.setup-section h3 {
   font-size: 1.2rem;
   color: var(--text-primary);
   margin-bottom: 1rem;
@@ -555,13 +569,93 @@ main {
   color: var(--text-primary);
 }
 
-.menu-actions {
+.setup-actions {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
 }
 
-.menu-actions .btn {
+.setup-actions .btn {
+  min-width: 200px;
+  justify-content: center;
+}
+
+.setup-auth {
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--border-color);
+  text-align: center;
+}
+
+.setup-auth p {
+  color: var(--warning);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.setup-auth .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ===== COMPLETION MODAL ===== */
+.completion-celebration {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: bounce 0.8s ease-in-out;
+}
+
+.completion-header {
+  margin-bottom: 1.5rem;
+}
+
+.completion-header h2 {
+  font-size: 1.8rem;
+  color: var(--success);
+  margin-bottom: 0.5rem;
+}
+
+.completion-time {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.save-prompt {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1));
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--warning);
+}
+
+.save-prompt p {
+  color: var(--warning);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.save-prompt .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.save-section {
+  margin-bottom: 1.5rem;
+}
+
+.save-section .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.completion-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.completion-actions .btn {
   width: 100%;
   justify-content: center;
 }
@@ -587,6 +681,15 @@ main {
   }
 }
 
+@keyframes bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
@@ -598,12 +701,12 @@ main {
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
-  .menu-content {
+  .setup-content {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
 
-  .modal-menu {
+  .modal-setup {
     width: 100%;
   }
 }
@@ -701,5 +804,9 @@ main {
 
   .completion-time {
     font-size: 1rem;
+  }
+
+  .setup-header h2 {
+    font-size: 1.5rem;
   }
 }
