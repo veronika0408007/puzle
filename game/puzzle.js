@@ -41,6 +41,7 @@ const saveSection = document.getElementById('saveSection');
 const userInfo = document.getElementById('userInfo');
 const logoutBtn = document.getElementById('logoutBtn');
 const headerSignup = document.getElementById('headerSignup');
+const historyBtn = document.getElementById('historyBtn');
 
 // ===== STATE =====
 let selectedPreset = presets[0];
@@ -70,6 +71,7 @@ function checkAuthStatus() {
     userInfo.style.display = 'block';
     logoutBtn.style.display = 'inline-flex';
     headerSignup.style.display = 'none';
+    historyBtn.style.display = 'inline-flex';
     savePrompt.style.display = 'none';
     saveSection.style.display = 'block';
     setupSignup.style.display = 'none';
@@ -79,6 +81,7 @@ function checkAuthStatus() {
     userInfo.style.display = 'none';
     logoutBtn.style.display = 'none';
     headerSignup.style.display = 'inline-flex';
+    historyBtn.style.display = 'none';
     savePrompt.style.display = 'block';
     saveSection.style.display = 'none';
     setupSignup.style.display = 'inline-flex';
@@ -379,34 +382,115 @@ completionShuffle.addEventListener('click', () => {
 
 completionClose.addEventListener('click', hideCompletion);
 
-completionSave.addEventListener('click', () => {
+completionSave.addEventListener('click', async () => {
   if (!isLoggedIn) {
     alert('Please sign in to save results');
     return;
   }
 
-  const userData = JSON.parse(sessionStorage.getItem('userData'));
-  const result = {
-    imageName: currentImageName,
-    gridSize: `${cols}x${rows}`,
-    timeElapsed: formatElapsedTime(),
-    userId: userData.id,
-    date: new Date().toISOString()
-  };
+  completionSave.disabled = true;
+  completionSave.textContent = '⏳ Saving...';
 
-  fetch('../auth/save-result.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(result)
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      message.textContent = '✅ Result saved!';
-      hideCompletion();
+  try {
+    const userData = JSON.parse(sessionStorage.getItem('userData'));
+    const timeStr = formatElapsedTime();
+    const totalSec = startTime ? Math.floor((performance.now() - startTime) / 1000) : 0;
+
+    const { error } = await supabase
+      .from('puzzle_results')
+      .insert([{
+        user_id: userData.id,
+        image_name: currentImageName,
+        image_url: imageURL.startsWith('blob:') ? null : imageURL,
+        grid_size: `${cols}×${rows}`,
+        cols: cols,
+        rows: rows,
+        time_elapsed: timeStr,
+        time_seconds: totalSec
+      }]);
+
+    if (error) throw error;
+
+    completionSave.textContent = '✅ Saved!';
+    message.textContent = '✅ Result saved to your profile!';
+    setTimeout(() => hideCompletion(), 1200);
+  } catch (err) {
+    console.error('Save error:', err);
+    completionSave.textContent = '❌ Error saving';
+    completionSave.disabled = false;
+  }
+});
+
+// ===== HISTORY OVERLAY =====
+async function showHistory() {
+  if (!isLoggedIn) {
+    alert('Please sign in to view history');
+    return;
+  }
+
+  const overlay = document.getElementById('historyOverlay');
+  const list = document.getElementById('historyList');
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  list.innerHTML = '<p class="history-loading">⏳ Loading...</p>';
+
+  try {
+    const userData = JSON.parse(sessionStorage.getItem('userData'));
+    const { data, error } = await supabase
+      .from('puzzle_results')
+      .select('*')
+      .eq('user_id', userData.id)
+      .order('completed_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p class="history-empty">No results yet. Solve some puzzles!</p>';
+      return;
     }
-  })
-  .catch(err => console.error('Save error:', err));
+
+    list.innerHTML = data.map(r => `
+      <div class="history-item">
+        ${r.image_url
+          ? `<img class="history-thumb" src="${r.image_url}" alt="${r.image_name}" onerror="this.style.display='none'">`
+          : `<div class="history-thumb history-thumb-placeholder">🧩</div>`
+        }
+        <div class="history-info">
+          <div class="history-name">${r.image_name}</div>
+          <div class="history-meta">
+            <span>📐 ${r.grid_size}</span>
+            <span>⏱️ ${r.time_elapsed}</span>
+          </div>
+          <div class="history-date">${new Date(r.completed_at).toLocaleString()}</div>
+        </div>
+        <button class="history-delete btn btn-ghost" data-id="${r.id}" title="Delete">🗑️</button>
+      </div>
+    `).join('');
+
+    list.querySelectorAll('.history-delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const { error } = await supabase.from('puzzle_results').delete().eq('id', id);
+        if (!error) btn.closest('.history-item').remove();
+      });
+    });
+
+  } catch (err) {
+    list.innerHTML = `<p class="history-empty">Error loading results: ${err.message}</p>`;
+  }
+}
+
+document.getElementById('historyBtn').addEventListener('click', showHistory);
+document.getElementById('historyClose').addEventListener('click', () => {
+  document.getElementById('historyOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+});
+document.getElementById('historyOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('historyOverlay')) {
+    document.getElementById('historyOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
 });
 
 // ===== TIMER =====
@@ -451,12 +535,18 @@ previewBtn.addEventListener('click', () => {
     previewBtn.textContent = '👁️ Preview';
     return;
   }
-  const canvasSize = 300;
-  const pW = Math.floor(canvasSize / cols);
-  const pH = Math.floor(canvasSize / rows);
+  // Используем те же размеры тайлов что и в основном пазле
+  const pW = pieceWidth;
+  const pH = pieceHeight;
+  const gridW = cols * pW + (cols - 1) * 2 + 8; // gap=2px*cols + padding=4px*2
+  const gridH = rows * pH + (rows - 1) * 2 + 8;
+
   previewPuzzle.innerHTML = '';
   previewPuzzle.style.gridTemplateColumns = `repeat(${cols}, ${pW}px)`;
   previewPuzzle.style.gridTemplateRows = `repeat(${rows}, ${pH}px)`;
+  // Карточка точно по размеру сетки (padding 1.5rem = 24px с каждой стороны)
+  previewContainer.style.width = (gridW + 48) + 'px';
+
   for (let i = 0; i < cols * rows; i++) {
     const r = Math.floor(i / cols), c = i % cols;
     const pp = document.createElement('div');
