@@ -15,6 +15,7 @@
       <span id="userInfo"></span>
       <button id="logoutBtn" class="btn btn-secondary" style="display:none;">Sign out</button>
       <button id="headerSignup" class="btn btn-primary">👤 Register</button>
+      <button id="historyBtn" class="btn btn-secondary">📊 History</button>
       <button id="menuBtn" class="btn btn-secondary">🎮 Menu</button>
       <button id="previewBtn" class="btn btn-secondary">👁️ Preview</button>
       <button id="shuffleBtn" class="btn btn-secondary" disabled>🔀 Shuffle</button>
@@ -144,6 +145,20 @@
   </div>
 </div>
 
+
+<!-- History Overlay -->
+<div id="historyOverlay" class="overlay" role="dialog" aria-modal="true">
+  <div class="modal modal-history">
+    <div class="history-header">
+      <h2>📊 My Results</h2>
+      <button id="historyClose" class="btn btn-ghost">✕ Close</button>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
 <script src="puzzle.js"></script>
 
 </body>
