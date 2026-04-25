@@ -17,6 +17,7 @@ const setupUpload = document.getElementById('setupUpload');
 const setupSignup = document.getElementById('setupSignup');
 const authMessage = document.getElementById('authMessage');
 
+const menuBtn = document.getElementById('menuBtn');
 const imageUpload = document.getElementById('imageUpload');
 const previewBtn = document.getElementById('previewBtn');
 const shuffleBtn = document.getElementById('shuffleBtn');
@@ -39,6 +40,7 @@ const saveSection = document.getElementById('saveSection');
 
 const userInfo = document.getElementById('userInfo');
 const logoutBtn = document.getElementById('logoutBtn');
+const headerSignup = document.getElementById('headerSignup');
 
 // ===== STATE =====
 let selectedPreset = presets[0];
@@ -67,6 +69,7 @@ function checkAuthStatus() {
     userInfo.textContent = `👤 ${user.fullName}`;
     userInfo.style.display = 'block';
     logoutBtn.style.display = 'inline-flex';
+    headerSignup.style.display = 'none';
     savePrompt.style.display = 'none';
     saveSection.style.display = 'block';
     setupSignup.style.display = 'none';
@@ -75,12 +78,22 @@ function checkAuthStatus() {
     isLoggedIn = false;
     userInfo.style.display = 'none';
     logoutBtn.style.display = 'none';
+    headerSignup.style.display = 'inline-flex';
     savePrompt.style.display = 'block';
     saveSection.style.display = 'none';
     setupSignup.style.display = 'inline-flex';
     authMessage.style.display = 'block';
   }
 }
+
+menuBtn.addEventListener('click', () => {
+  setupOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+});
+
+headerSignup.addEventListener('click', () => {
+  window.location.href = '../auth/index.html';
+});
 
 logoutBtn.addEventListener('click', () => {
   sessionStorage.removeItem('userToken');
@@ -438,7 +451,7 @@ previewBtn.addEventListener('click', () => {
     previewBtn.textContent = '👁️ Preview';
     return;
   }
-  const canvasSize = 500;
+  const canvasSize = 300;
   const pW = Math.floor(canvasSize / cols);
   const pH = Math.floor(canvasSize / rows);
   previewPuzzle.innerHTML = '';
