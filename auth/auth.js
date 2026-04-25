@@ -1,45 +1,41 @@
 /* ===== AUTH MODULE ===== */
 const authModule = {
-  /* Elements */
   elements: {
     loginSection: document.getElementById('loginSection'),
     registerSection: document.getElementById('registerSection'),
     verificationSection: document.getElementById('verificationSection'),
     successSection: document.getElementById('successSection'),
-    
+
     loginForm: document.getElementById('loginForm'),
     registerForm: document.getElementById('registerForm'),
-    
+
     loginEmail: document.getElementById('loginEmail'),
     loginPassword: document.getElementById('loginPassword'),
     loginError: document.getElementById('loginError'),
-    
+
     regFullName: document.getElementById('regFullName'),
     regEmail: document.getElementById('regEmail'),
     regPassword: document.getElementById('regPassword'),
     regPasswordConfirm: document.getElementById('regPasswordConfirm'),
     registerError: document.getElementById('registerError'),
-    
+
     switchToRegister: document.getElementById('switchToRegister'),
     switchToLogin: document.getElementById('switchToLogin'),
-    
+
     verificationEmail: document.getElementById('verificationEmail'),
     resendEmailBtn: document.getElementById('resendEmailBtn'),
     backToLoginBtn: document.getElementById('backToLoginBtn'),
-    
+
     welcomeMessage: document.getElementById('welcomeMessage'),
     playGameBtn: document.getElementById('playGameBtn'),
   },
 
-  /* Initialize */
   init() {
     this.checkVerification();
     this.attachEventListeners();
   },
 
-  /* Attach Event Listeners */
   attachEventListeners() {
-    /* Form Submissions */
     this.elements.loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleLogin();
@@ -50,15 +46,12 @@ const authModule = {
       this.handleRegister();
     });
 
-    /* Section Switching */
     this.elements.switchToRegister.addEventListener('click', () => this.showRegister());
     this.elements.switchToLogin.addEventListener('click', () => this.showLogin());
-    
-    /* Verification */
+
     this.elements.resendEmailBtn.addEventListener('click', () => this.resendEmail());
     this.elements.backToLoginBtn.addEventListener('click', () => this.showLogin());
-    
-    /* Play Game */
+
     this.elements.playGameBtn.addEventListener('click', () => this.redirectToGame());
   },
 
@@ -76,21 +69,15 @@ const authModule = {
     this.clearError('loginError');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      /* Get user profile */
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('full_name')
         .eq('user_id', data.user.id)
         .single();
 
-      /* Save to session */
       const userData = {
         id: data.user.id,
         email: data.user.email,
@@ -115,17 +102,14 @@ const authModule = {
     const password = this.elements.regPassword.value.trim();
     const confirmPassword = this.elements.regPasswordConfirm.value.trim();
 
-    /* Validation */
     if (!fullName || !email || !password || !confirmPassword) {
       this.showError('registerError', 'Please fill in all fields');
       return;
     }
-
     if (password.length < 6) {
       this.showError('registerError', 'Password must be at least 6 characters');
       return;
     }
-
     if (password !== confirmPassword) {
       this.showError('registerError', 'Passwords do not match');
       return;
@@ -135,32 +119,19 @@ const authModule = {
     this.clearError('registerError');
 
     try {
-      /* Sign up */
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: { full_name: fullName }
-        }
+        options: { data: { full_name: fullName } }
       });
-
       if (error) throw error;
 
-      /* Create profile */
       if (data.user) {
         const { error: profileError } = await supabase
           .from('user_profiles')
-          .insert([
-            {
-              user_id: data.user.id,
-              full_name: fullName,
-              email: email
-            }
-          ]);
+          .insert([{ user_id: data.user.id, full_name: fullName, email }]);
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-        }
+        if (profileError) console.error('Profile error:', profileError);
       }
 
       this.showVerification(email);
@@ -171,7 +142,7 @@ const authModule = {
     }
   },
 
-  /* ===== VERIFICATION ===== */
+  /* ===== EMAIL VERIFICATION ===== */
   checkVerification() {
     const hash = window.location.hash;
     if (hash.includes('type=recovery') || hash.includes('type=signup')) {
@@ -185,7 +156,6 @@ const authModule = {
         token_hash: window.location.hash,
         type: 'email'
       });
-
       if (error) throw error;
 
       if (data.user) {
@@ -194,10 +164,8 @@ const authModule = {
           email: data.user.email,
           fullName: data.user.user_metadata?.full_name || data.user.email
         };
-
         sessionStorage.setItem('userToken', data.session.access_token);
         sessionStorage.setItem('userData', JSON.stringify(userData));
-
         this.showSuccess(userData);
       }
     } catch (error) {
@@ -207,20 +175,14 @@ const authModule = {
   },
 
   async resendEmail() {
-    const email = this.elements.verificationEmail.textContent;
-    
+    const emailText = this.elements.verificationEmail.textContent;
+    const email = emailText.replace('Verification email sent to ', '').trim();
     if (!email) return;
 
     this.setLoading(this.elements.resendEmailBtn, true);
-
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email
-      });
-
+      const { error } = await supabase.auth.resend({ type: 'signup', email });
       if (error) throw error;
-
       alert('Verification email sent!');
     } catch (error) {
       alert('Error: ' + error.message);
@@ -229,7 +191,7 @@ const authModule = {
     }
   },
 
-  /* ===== UI FUNCTIONS ===== */
+  /* ===== UI ===== */
   showLogin() {
     this.elements.loginSection.style.display = 'block';
     this.elements.registerSection.style.display = 'none';
@@ -264,36 +226,26 @@ const authModule = {
     this.elements.welcomeMessage.textContent = `Welcome, ${userData.fullName}!`;
   },
 
-  /* Error/Loading */
   showError(elementId, message) {
-    const errorEl = document.getElementById(elementId);
-    errorEl.textContent = message;
-    errorEl.classList.add('show');
+    const el = document.getElementById(elementId);
+    el.textContent = message;
+    el.classList.add('show');
   },
 
   clearError(elementId) {
-    const errorEl = document.getElementById(elementId);
-    errorEl.textContent = '';
-    errorEl.classList.remove('show');
+    const el = document.getElementById(elementId);
+    el.textContent = '';
+    el.classList.remove('show');
   },
 
   setLoading(button, isLoading) {
-    if (isLoading) {
-      button.classList.add('loading');
-      button.disabled = true;
-    } else {
-      button.classList.remove('loading');
-      button.disabled = false;
-    }
+    button.classList.toggle('loading', isLoading);
+    button.disabled = isLoading;
   },
 
-  /* Navigation */
   redirectToGame() {
     window.location.href = '../game/index.html';
   }
 };
 
-/* Initialize */
-document.addEventListener('DOMContentLoaded', () => {
-  authModule.init();
-});
+document.addEventListener('DOMContentLoaded', () => authModule.init());
