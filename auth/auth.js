@@ -1,14 +1,14 @@
-/* ===== AUTH MODULE ===== */
+/* module auth  */
 const authModule = {
   elements: {
     loginSection: document.getElementById('loginSection'),
     registerSection: document.getElementById('registerSection'),
     verificationSection: document.getElementById('verificationSection'),
     successSection: document.getElementById('successSection'),
-
+    
     loginForm: document.getElementById('loginForm'),
     registerForm: document.getElementById('registerForm'),
-
+    
     loginEmail: document.getElementById('loginEmail'),
     loginPassword: document.getElementById('loginPassword'),
     loginError: document.getElementById('loginError'),
@@ -29,49 +29,42 @@ const authModule = {
     welcomeMessage: document.getElementById('welcomeMessage'),
     playGameBtn: document.getElementById('playGameBtn'),
   },
-
   init() {
     this.checkVerification();
     this.attachEventListeners();
   },
-
   attachEventListeners() {
     this.elements.loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleLogin();
     });
-
     this.elements.registerForm.addEventListener('submit', (e) => {
       e.preventDefault();
       this.handleRegister();
     });
-
     this.elements.switchToRegister.addEventListener('click', () => this.showRegister());
     this.elements.switchToLogin.addEventListener('click', () => this.showLogin());
-
+    
     this.elements.resendEmailBtn.addEventListener('click', () => this.resendEmail());
     this.elements.backToLoginBtn.addEventListener('click', () => this.showLogin());
 
     this.elements.playGameBtn.addEventListener('click', () => this.redirectToGame());
   },
 
-  /* ===== LOGIN ===== */
+  /* login */
   async handleLogin() {
     const email = this.elements.loginEmail.value.trim();
     const password = this.elements.loginPassword.value.trim();
-
     if (!email || !password) {
       this.showError('loginError', 'Please fill in all fields');
       return;
     }
-
     this.setLoading(this.elements.loginForm.querySelector('button[type="submit"]'), true);
     this.clearError('loginError');
 
     try {
       const { data, error } = await db.auth.signInWithPassword({ email, password });
       if (error) throw error;
-
       const { data: profile } = await db
         .from('user_profiles')
         .select('full_name')
@@ -83,10 +76,8 @@ const authModule = {
         email: data.user.email,
         fullName: profile?.full_name || email
       };
-
       sessionStorage.setItem('userToken', data.session.access_token);
       sessionStorage.setItem('userData', JSON.stringify(userData));
-
       this.showSuccess(userData);
     } catch (error) {
       this.showError('loginError', error.message);
@@ -95,7 +86,7 @@ const authModule = {
     }
   },
 
-  /* ===== REGISTER ===== */
+  /* registration */
   async handleRegister() {
     const fullName = this.elements.regFullName.value.trim();
     const email = this.elements.regEmail.value.trim();
@@ -114,10 +105,8 @@ const authModule = {
       this.showError('registerError', 'Passwords do not match');
       return;
     }
-
     this.setLoading(this.elements.registerForm.querySelector('button[type="submit"]'), true);
     this.clearError('registerError');
-
     try {
       const { data, error } = await db.auth.signUp({
         email,
@@ -142,7 +131,7 @@ const authModule = {
     }
   },
 
-  /* ===== EMAIL VERIFICATION ===== */
+  /* e-mail verification */
   checkVerification() {
     const hash = window.location.hash;
     if (hash.includes('type=recovery') || hash.includes('type=signup')) {
@@ -178,7 +167,6 @@ const authModule = {
     const emailText = this.elements.verificationEmail.textContent;
     const email = emailText.replace('Verification email sent to ', '').trim();
     if (!email) return;
-
     this.setLoading(this.elements.resendEmailBtn, true);
     try {
       const { error } = await db.auth.resend({ type: 'signup', email });
@@ -191,7 +179,7 @@ const authModule = {
     }
   },
 
-  /* ===== UI ===== */
+  /* user interface*/
   showLogin() {
     this.elements.loginSection.style.display = 'block';
     this.elements.registerSection.style.display = 'none';
