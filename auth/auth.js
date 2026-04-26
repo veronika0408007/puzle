@@ -72,7 +72,7 @@ const authModule = {
       const { data, error } = await db.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      const { data: profile } = await supabase
+      const { data: profile } = await db
         .from('user_profiles')
         .select('full_name')
         .eq('user_id', data.user.id)
@@ -127,7 +127,7 @@ const authModule = {
       if (error) throw error;
 
       if (data.user) {
-        const { error: profileError } = await supabase
+        const { error: profileError } = await db
           .from('user_profiles')
           .insert([{ user_id: data.user.id, full_name: fullName, email }]);
 
