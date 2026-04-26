@@ -69,7 +69,7 @@ const authModule = {
     this.clearError('loginError');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
       const { data: profile } = await supabase
@@ -119,7 +119,7 @@ const authModule = {
     this.clearError('registerError');
 
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await db.auth.signUp({
         email,
         password,
         options: { data: { full_name: fullName } }
@@ -152,7 +152,7 @@ const authModule = {
 
   async verifyEmail() {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { data, error } = await db.auth.verifyOtp({
         token_hash: window.location.hash,
         type: 'email'
       });
@@ -181,7 +181,7 @@ const authModule = {
 
     this.setLoading(this.elements.resendEmailBtn, true);
     try {
-      const { error } = await supabase.auth.resend({ type: 'signup', email });
+      const { error } = await db.auth.resend({ type: 'signup', email });
       if (error) throw error;
       alert('Verification email sent!');
     } catch (error) {
