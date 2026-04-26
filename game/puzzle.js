@@ -1,4 +1,4 @@
-// ===== PRESETS =====
+// Presents 
 const presets = [
   { id: 'p1', title: 'Mountain', url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1200&auto=format&fit=crop' },
   { id: 'p2', title: 'City', url: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=1200&auto=format&fit=crop' },
@@ -6,7 +6,7 @@ const presets = [
   { id: 'p4', title: 'Friends', url: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?q=80&w=1200&auto=format&fit=crop' }
 ];
 
-// ===== DOM ELEMENTS =====
+// elements
 const setupOverlay = document.getElementById('setupOverlay');
 const presetList = document.getElementById('presetList');
 const presetSizes = document.getElementById('presetSizes');
@@ -16,7 +16,6 @@ const setupCreate = document.getElementById('setupCreate');
 const setupUpload = document.getElementById('setupUpload');
 const setupSignup = document.getElementById('setupSignup');
 const authMessage = document.getElementById('authMessage');
-
 const menuBtn = document.getElementById('menuBtn');
 const imageUpload = document.getElementById('imageUpload');
 const previewBtn = document.getElementById('previewBtn');
@@ -27,7 +26,6 @@ const previewContainer = document.getElementById('previewContainer');
 const previewPuzzle = document.getElementById('previewPuzzle');
 const message = document.getElementById('message');
 const timerDisplay = document.getElementById('timer');
-
 const completionOverlay = document.getElementById('completionOverlay');
 const completionTime = document.getElementById('completionTime');
 const completionNew = document.getElementById('completionNew');
@@ -37,13 +35,12 @@ const completionSignup = document.getElementById('completionSignup');
 const completionSave = document.getElementById('completionSave');
 const savePrompt = document.getElementById('savePrompt');
 const saveSection = document.getElementById('saveSection');
-
 const userInfo = document.getElementById('userInfo');
 const logoutBtn = document.getElementById('logoutBtn');
 const headerSignup = document.getElementById('headerSignup');
 const historyBtn = document.getElementById('historyBtn');
 
-// ===== STATE =====
+// State
 let selectedPreset = presets[0];
 let uploadedURL = '';
 let imageURL = selectedPreset.url;
@@ -59,7 +56,7 @@ let solvedAlready = false;
 let selectedPiece = null;
 let isLoggedIn = false;
 
-// ===== CHECK AUTH =====
+//check auth
 function checkAuthStatus() {
   const token = sessionStorage.getItem('userToken');
   const userData = sessionStorage.getItem('userData');
@@ -103,7 +100,7 @@ logoutBtn.addEventListener('click', () => {
   sessionStorage.removeItem('userData');
   isLoggedIn = false;
   checkAuthStatus();
-  message.textContent = '👋 You have been signed out';
+  message.textContent = 'You have been signed out';
 });
 
 setupSignup.addEventListener('click', () => {
@@ -114,7 +111,7 @@ completionSignup.addEventListener('click', () => {
   window.location.href = '../auth/index.html';
 });
 
-// ===== BUILD PRESETS =====
+// build presets
 presets.forEach(p => {
   const el = document.createElement('div');
   el.className = 'presetItem selected';
@@ -130,7 +127,7 @@ presets.forEach(p => {
   presetList.appendChild(el);
 });
 
-// ===== SIZE BUTTONS =====
+// buttons size
 presetSizes.querySelectorAll('button').forEach(btn => {
   btn.addEventListener('click', () => {
     presetSizes.querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -140,7 +137,7 @@ presetSizes.querySelectorAll('button').forEach(btn => {
   });
 });
 
-// ===== UPLOAD =====
+// upload
 setupUpload.addEventListener('change', e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
@@ -161,7 +158,7 @@ imageUpload.addEventListener('change', e => {
   message.textContent = '✅ Custom image uploaded!';
 });
 
-// ===== CREATE PUZZLE =====
+//create puzzle
 setupCreate.addEventListener('click', () => {
   const c = Math.max(1, Math.min(30, +setupCols.value || 5));
   const r = Math.max(1, Math.min(30, +setupRows.value || 6));
@@ -176,7 +173,7 @@ setupCreate.addEventListener('click', () => {
   createPuzzle(imageURL, c, r);
 });
 
-// ===== FIX 1: ждём загрузки изображения перед созданием тайлов =====
+// loading
 function createPuzzle(imgSrc, c, r) {
   cols = c;
   rows = r;
@@ -255,7 +252,7 @@ function buildPuzzle(imgSrc) {
   message.textContent = '🎮 Puzzle ready! Start solving!';
 }
 
-// ===== SHUFFLE =====
+// shuffle
 shuffleBtn.addEventListener('click', () => {
   shuffle();
   solvedAlready = false;
@@ -274,7 +271,7 @@ function shuffle() {
   document.querySelectorAll('.piece').forEach(p => p.style.border = '2px solid transparent');
 }
 
-// ===== DROP HANDLER =====
+//drop handler
 function onDropOnCell(e) {
   e.preventDefault();
   this.classList.remove('drop-target');
@@ -291,7 +288,7 @@ function onDropOnCell(e) {
   else if (isSolved()) finishPuzzle();
 }
 
-// ===== SELECTION =====
+// select
 function toggleSelect(piece) {
   if (selectedPiece) selectedPiece.classList.remove('selected');
   if (selectedPiece === piece) selectedPiece = null;
@@ -316,7 +313,7 @@ puzzle.addEventListener('click', e => {
   else if (isSolved()) finishPuzzle();
 });
 
-// ===== CHECK POSITIONS =====
+// check positions
 function checkPositions() {
   if (!cells.length) return;
   let solved = true;
@@ -335,7 +332,7 @@ function isSolved() {
   return cells.length && cells.every((cell, i) => +cell.firstChild.dataset.correct === i);
 }
 
-// ===== CHECK TOGGLE =====
+// check toggle
 enableCheckEl.addEventListener('change', () => {
   if (enableCheckEl.checked) {
     checkPositions();
@@ -346,7 +343,7 @@ enableCheckEl.addEventListener('change', () => {
   }
 });
 
-// ===== FINISH =====
+//finish
 function finishPuzzle() {
   if (solvedAlready) return;
   solvedAlready = true;
@@ -421,7 +418,7 @@ completionSave.addEventListener('click', async () => {
   }
 });
 
-// ===== HISTORY OVERLAY =====
+//history or progress
 async function showHistory() {
   if (!isLoggedIn) {
     alert('Please sign in to view history');
@@ -493,7 +490,7 @@ document.getElementById('historyOverlay').addEventListener('click', (e) => {
   }
 });
 
-// ===== TIMER =====
+//timer
 function startTimer() {
   if (started) return;
   started = true;
@@ -527,7 +524,7 @@ function formatElapsedTime() {
   return `${min}:${sec.toString().padStart(2, '0')}:${ms}`;
 }
 
-// ===== PREVIEW =====
+// preview
 previewBtn.addEventListener('click', () => {
   if (!imageURL) return alert('Choose image from menu');
   if (previewContainer.style.display === 'block') {
@@ -535,7 +532,6 @@ previewBtn.addEventListener('click', () => {
     previewBtn.textContent = '👁️ Preview';
     return;
   }
-  // Используем те же размеры тайлов что и в основном пазле
   const pW = pieceWidth;
   const pH = pieceHeight;
   const gridW = cols * pW + (cols - 1) * 2 + 8; // gap=2px*cols + padding=4px*2
@@ -544,7 +540,6 @@ previewBtn.addEventListener('click', () => {
   previewPuzzle.innerHTML = '';
   previewPuzzle.style.gridTemplateColumns = `repeat(${cols}, ${pW}px)`;
   previewPuzzle.style.gridTemplateRows = `repeat(${rows}, ${pH}px)`;
-  // Карточка точно по размеру сетки (padding 1.5rem = 24px с каждой стороны)
   previewContainer.style.width = (gridW + 48) + 'px';
 
   for (let i = 0; i < cols * rows; i++) {
@@ -561,7 +556,7 @@ previewBtn.addEventListener('click', () => {
   previewBtn.textContent = '✕ Hide';
 });
 
-// ===== TOUCH SUPPORT =====
+// touch
 let touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
 
 function onTouchStart(e) {
@@ -603,7 +598,7 @@ function onTouchEnd(e) {
   touchDrag = { piece: null, srcCell: null, currentTargetCell: null };
 }
 
-// ===== FIX 2: закрытие оверлеев кликом по фону =====
+// close by click
 setupOverlay.addEventListener('click', (e) => {
   if (e.target === setupOverlay) {
     setupOverlay.classList.remove('active');
@@ -615,5 +610,5 @@ completionOverlay.addEventListener('click', (e) => {
   if (e.target === completionOverlay) hideCompletion();
 });
 
-// ===== INIT =====
+//init
 checkAuthStatus();
