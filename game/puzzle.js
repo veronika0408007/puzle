@@ -396,7 +396,7 @@ completionSave.addEventListener('click', async () => {
     const timeStr = formatElapsedTime();
     const totalSec = startTime ? Math.floor((performance.now() - startTime) / 1000) : 0;
 
-    const { error } = await supabase
+    const { error } = await db
       .from('puzzle_results')
       .insert([{
         user_id: userData.id,
@@ -436,7 +436,7 @@ async function showHistory() {
 
   try {
     const userData = JSON.parse(sessionStorage.getItem('userData'));
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('puzzle_results')
       .select('*')
       .eq('user_id', userData.id)
@@ -471,7 +471,7 @@ async function showHistory() {
     list.querySelectorAll('.history-delete').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
-        const { error } = await supabase.from('puzzle_results').delete().eq('id', id);
+        const { error } = await db.from('puzzle_results').delete().eq('id', id);
         if (!error) btn.closest('.history-item').remove();
       });
     });
